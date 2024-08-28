@@ -134,7 +134,7 @@ class LimerickDetector:
         last = []
         for line in lines:
             tmp = line.strip(punctuation)
-            tmp = word_tokenize(tmp)
+            tmp = self.apostrophe_tokenize(tmp)
             # table = string.maketrans("","")
             # tmp = tmp.translate(table, punctuation)
             last.append(tmp[-1])
@@ -178,8 +178,10 @@ class LimerickDetector:
 
 
         return True
-    
-        
+    def apostrophe_tokenize(self, text):
+        text = text.replace("'", "")
+        return word_tokenize(text)
+
 if __name__ == "__main__":
     ld = LimerickDetector()
 
