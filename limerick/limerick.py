@@ -3,6 +3,7 @@
 
 # Use word_tokenize to split raw text into words
 import nltk
+nltk.download('cmudict')
 import json
 
 from nltk.tokenize import word_tokenize
@@ -44,7 +45,18 @@ class LimerickDetector:
         """
 
         # TODO: Complete this function
-        return 1
+        list = word.split(' ')
+        print(list)
+        count = 0
+        for w in list:
+            try:
+                print(self._pronunciations[w.lower()])
+                syllables = self._pronunciations[w.lower()]
+                shorter = min(map(len,syllables))
+                count += shorter
+            except KeyError:
+                count += 1
+        return count
     
     def after_stressed(self, word):
         """
@@ -54,12 +66,28 @@ class LimerickDetector:
         """
 
         # TODO: Complete this function
-        
+
         pronunciations = self._pronunciations.get(self._normalize(word), [])
-        
+        print('ps: ',pronunciations)
         for pronunciation in pronunciations:
+            print(pronunciation)
+            s = self.stress(pronunciation)
+            ls = [i for i, e in enumerate(s) if e != 0]
+            last = ls[-1]
+            if last == len(s):
                 yield pronunciation
-    
+            else:
+                for i in range(last+1,len(s)):
+                    yield pronunciation[i]
+
+    def stress(self,pron):
+        s = [0 for _ in range(len(pron))]
+        for i in range(len(pron)):
+            phone = pron[i]
+            for char in phone:
+                if char.isdigit():
+                    s[i] = int(char)
+        return s
     def rhymes(self, a, b):
         """
         Returns True if two words (represented as lower-case strings) rhyme,
@@ -116,7 +144,12 @@ if __name__ == "__main__":
     limerick_tests = ld.load_json("sample_limericks.json")
     
     words = ["billow", "pillow", "top", "America", "doghouse", "two words", "Laptop", "asdfasd"]
-
+    for word in words:
+        ld.after_stressed(word)
+        print('stress printed')
+    #     print(word)
+    #     print(ld.num_syllables(word))
+    # print('end')
     for display, func in [["Syllables", ld.num_syllables],
                           ["After Stressed", lambda x: list(ld.after_stressed(x))],
                           ["Rhymes", lambda x: "\t".join("%10s%6s" % (y, ld.rhymes(x, y)) for y in words)]]:
