@@ -181,6 +181,24 @@ class LimerickDetector:
     def apostrophe_tokenize(self, text):
         text = text.replace("'", "")
         return word_tokenize(text)
+    
+    def guess_syllables(self, word):
+        word = word.lower()
+        vowel_groups = []
+        count = 0
+        #search the number of vowel groups in a word (y is also considered as a vowel)
+        #vowel group: if several vowels are next to each other, then they are seen as a group
+        for m in re.finditer(r'[aeiouy]+', word):
+            count += 1
+            vowel_groups.append(m.group())
+        #if e is at the end of a word which is longer than 2 letters, then usually it is not a syllable
+        #however if the word ends with he or phe, then the ending e makes a syllable. 
+        if vowel_groups[-1] == 'e' and word[-1] == 'e' and len(word) > 2 and word[-2]!= 'h':
+            count -= 1    
+            
+        return count
+
+            
 
 if __name__ == "__main__":
     ld = LimerickDetector()
@@ -191,6 +209,7 @@ if __name__ == "__main__":
 
     # for key, values in ld._pronunciations.items():
     #     ld.num_syllables(key)
+
     
     for display, func in [["Syllables", ld.num_syllables],
                           ["After Stressed", lambda x: list(ld.after_stressed(x))],
@@ -204,3 +223,16 @@ if __name__ == "__main__":
         print("=========\n")
         print(limerick)
         print("Truth: %s\tResult: %s" % (result, ld.is_limerick(limerick)))
+    aa = 'regression'
+    bb = 'question'
+    cc = 'depression'
+    dd = 'session'
+    ee = 'profession'
+    ff = 'progression'
+    print(ld.rhymes(aa,bb))
+    print(ld.rhymes(aa,cc))
+    print(ld.rhymes(aa,dd))
+    print(ld.rhymes(aa,ee))
+    print(ld.rhymes(aa,ff))
+    print(ld._pronunciations[aa])
+    print(ld._pronunciations[bb])

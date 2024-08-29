@@ -42,5 +42,11 @@
 		  "The second line is for having a pant.",
 		  "The dress caught fire",
 		  "And burned her entire",
-		  "To poem is what I can't."]}
+		  "To poem is what I can't."]},
+	{"limerick": "true",
+		"lines":  ["Innovating machine learning is a hard question",
+		  "Everyday it drags me into depression",
+		  "Years later I finally make a progression",
+		  "It's time for me to enter a profession",
+		  "Oh why the companies merely use linear regression!" ]}
 ]
