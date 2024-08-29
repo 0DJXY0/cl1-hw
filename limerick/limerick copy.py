@@ -197,6 +197,37 @@ class LimerickDetector:
             count -= 1    
             
         return count
+    
+    def syllable_limerick(self, text):
+        text = text.strip()
+        lines = text.split('\n')
+        l = len(lines)
+        if l != 5:
+            return False
+        last = self.last_words(lines)
+        if not self.rhymes(last[0],last[1]):
+            # print('0 1: ',self.rhymes(last[0],last[1]))
+            return False
+        if not self.rhymes(last[0],last[4]):
+            # print('0 4: ',self.rhymes(last[0],last[4]))
+            return False
+        if not self.rhymes(last[1],last[4]):
+            # print('1 4: ',self.rhymes(last[1],last[4]))
+            return False   
+        if not self.rhymes(last[2],last[3]):
+            # print('2 3: ',self.rhymes(last[2],last[3]))
+            return False
+
+        for i in range(3):
+            words = self.apostrophe_tokenize(lines[i])
+            stress = []
+            for word in words:
+                pronunciations = self._pronunciations.get(self._normalize(word), [])
+                for pronunciation in pronunciations:
+                    stress = self.stress(pronunciation)
+                    print(stress)
+        raise KeyboardInterrupt  
+        return True        
 
             
 
@@ -223,6 +254,7 @@ if __name__ == "__main__":
         print("=========\n")
         print(limerick)
         print("Truth: %s\tResult: %s" % (result, ld.is_limerick(limerick)))
+        print("Truth: %s\tResult: %s" % (result, ld.syllable_limerick(limerick)))
     aa = 'regression'
     bb = 'question'
     cc = 'depression'
@@ -236,3 +268,4 @@ if __name__ == "__main__":
     print(ld.rhymes(aa,ff))
     print(ld._pronunciations[aa])
     print(ld._pronunciations[bb])
+    
