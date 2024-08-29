@@ -197,6 +197,28 @@ class LimerickDetector:
             count -= 1    
             
         return count
+    def feet_sheck(self, text):
+        words = self.apostrophe_tokenize(text)
+        stress_list = []
+        prons_list = []
+        for word in words:
+            prons_list.append(self._pronunciations.get(self._normalize(word), []))        
+        
+        def recur_loop(prons_list, n, stress_list):
+            if n <= len(prons_list):
+                l = len(prons_list[n])
+                for i in range(l):
+                    stress_list.append(prons_list[n][i])
+                    recur_loop(prons_list, n + 1, stress_list)
+            else:
+                if len(stress_list) != 9:
+                    return False
+                if sum(stress[0:2]) == 1 and sum(stress[3:5]) == 1 and sum(stress[6:8]) == 1:
+                    return True
+                else: 
+                    return False
+        recur_loop()
+    
     
     def syllable_limerick(self, text):
         text = text.strip()
@@ -219,13 +241,12 @@ class LimerickDetector:
             return False
 
         for i in range(3):
-            words = self.apostrophe_tokenize(lines[i])
-            stress = []
+            words = self.apostrophe_tokenize(text)
+            stress_list = []
+            prons_list = []
             for word in words:
-                pronunciations = self._pronunciations.get(self._normalize(word), [])
-                for pronunciation in pronunciations:
-                    stress = self.stress(pronunciation)
-                    print(stress)
+                prons_list.append(self._pronunciations.get(self._normalize(word), []))
+            
         raise KeyboardInterrupt  
         return True        
 
