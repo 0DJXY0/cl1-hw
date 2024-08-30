@@ -197,27 +197,53 @@ class LimerickDetector:
             count -= 1    
             
         return count
-    def feet_sheck(self, text):
+    def syllable_stress(self,pron):
+        s = []
+        for i in range(len(pron)):
+            phone = pron[i]
+            for char in phone:
+                if char.isdigit():
+                    s.append(int(char))
+        return s
+
+    def feet_check(self, text, num_feet):
+        text = text.strip(punctuation)
         words = self.apostrophe_tokenize(text)
+        # print(words)
         stress_list = []
         prons_list = []
         for word in words:
-            prons_list.append(self._pronunciations.get(self._normalize(word), []))        
-        
-        def recur_loop(prons_list, n, stress_list):
-            if n <= len(prons_list):
+            if self._pronunciations.get(self._normalize(word), [])!=[]:
+                prons_list.append(self._pronunciations.get(self._normalize(word), []))        
+        def recur_loop(prons_list, n, stress_list, num_feet, flag):
+            if n < len(prons_list):
                 l = len(prons_list[n])
-                for i in range(l):
-                    stress_list.append(prons_list[n][i])
-                    recur_loop(prons_list, n + 1, stress_list)
-            else:
-                if len(stress_list) != 9:
+                for i in range(l):                
+                    # print('stress: ',stress_list)
+                    # print('len: ',len(stress_list))
+                    s = self.syllable_stress(prons_list[n][i])    
+                    # print('new: ',s)
+                    # print('n = ' + str(n) + ' out of ' + str(len(prons_list)))
+                    flag = recur_loop(prons_list, n + 1, stress_list + s, num_feet, flag)
+                    # print(flag)
+                    if flag:
+                        return True
+            else: 
+                # print(stress_list)              
+                if len(stress_list) != 3*num_feet:
                     return False
-                if sum(stress[0:2]) == 1 and sum(stress[3:5]) == 1 and sum(stress[6:8]) == 1:
-                    return True
-                else: 
-                    return False
-        recur_loop()
+                for j in range(num_feet):
+                    if sum(stress_list[3*j:3*j+3]) != 1: 
+                        return False
+                
+                return True
+
+            return flag
+        flag = False
+        flag = recur_loop(prons_list,0,stress_list, num_feet, flag)
+
+        # print('recursive gives me: ',flag)
+        return flag
     
     
     def syllable_limerick(self, text):
@@ -240,14 +266,15 @@ class LimerickDetector:
             # print('2 3: ',self.rhymes(last[2],last[3]))
             return False
 
-        for i in range(3):
-            words = self.apostrophe_tokenize(text)
-            stress_list = []
-            prons_list = []
-            for word in words:
-                prons_list.append(self._pronunciations.get(self._normalize(word), []))
+        for i in [0,1,4]:
+            if not self.feet_check(lines[i],3):
+                return False
+        for i in [2,3]:
+            if not self.feet_check(lines[i],2):
+                return False
+ 
             
-        raise KeyboardInterrupt  
+        
         return True        
 
             
@@ -275,18 +302,18 @@ if __name__ == "__main__":
         print("=========\n")
         print(limerick)
         print("Truth: %s\tResult: %s" % (result, ld.is_limerick(limerick)))
-        print("Truth: %s\tResult: %s" % (result, ld.syllable_limerick(limerick)))
-    aa = 'regression'
-    bb = 'question'
-    cc = 'depression'
-    dd = 'session'
-    ee = 'profession'
-    ff = 'progression'
-    print(ld.rhymes(aa,bb))
-    print(ld.rhymes(aa,cc))
-    print(ld.rhymes(aa,dd))
-    print(ld.rhymes(aa,ee))
-    print(ld.rhymes(aa,ff))
-    print(ld._pronunciations[aa])
-    print(ld._pronunciations[bb])
+        print("Truth of syllable_limerick: %s\tResult: %s" % (result, ld.syllable_limerick(limerick)))
+    # aa = 'regression'
+    # bb = 'question'
+    # cc = 'depression'
+    # dd = 'session'
+    # ee = 'profession'
+    # ff = 'progression'
+    # print(ld.rhymes(aa,bb))
+    # print(ld.rhymes(aa,cc))
+    # print(ld.rhymes(aa,dd))
+    # print(ld.rhymes(aa,ee))
+    # print(ld.rhymes(aa,ff))
+    # print(ld._pronunciations[aa])
+    # print(ld._pronunciations[bb])
     

@@ -48,5 +48,17 @@
 		  "Everyday it drags me into depression",
 		  "Years later I finally make a progression",
 		  "It's time for me to enter a profession",
-		  "Oh why the companies merely use linear regression!" ]}
+		  "Oh why the companies merely use linear regression!" ]},
+	{"limerick": "true",
+			  "lines":  ["Depression depression depression",
+				"Depression depression depression",
+				"Depression depression",
+				"Depression depression",
+				"Depression depression depression"]},
+	{"limerick": "true",
+				"lines": ["An exceedingly fat depression!!!,",
+				  "And exceedingly hat depression,",
+				  "exceedingly 'seven,",
+				  "exceedingly heaven,",
+				  "An exceedingly sat depression'"]}
 ]
