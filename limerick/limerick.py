@@ -3,8 +3,8 @@
 
 # Use word_tokenize to split raw text into words
 import nltk
-# nltk.download('cmudict')
-# nltk.download('punkt_tab')
+nltk.download('cmudict')
+nltk.download('punkt_tab')
 import json
 
 from nltk.tokenize import word_tokenize
@@ -134,7 +134,7 @@ class LimerickDetector:
         last = []
         for line in lines:
             tmp = line.strip(punctuation)
-            tmp = word_tokenize(tmp)
+            tmp = self.apostrophe_tokenize(tmp)
             # table = string.maketrans("","")
             # tmp = tmp.translate(table, punctuation)
             last.append(tmp[-1])
@@ -178,8 +178,107 @@ class LimerickDetector:
 
 
         return True
+    def apostrophe_tokenize(self, text):
+        text = text.replace("'", "")
+        return word_tokenize(text)
     
+    def guess_syllables(self, word):
+        word = word.lower()
+        vowel_groups = []
+        count = 0
+        #search the number of vowel groups in a word (y is also considered as a vowel)
+        #vowel group: if several vowels are next to each other, then they are seen as a group
+        for m in re.finditer(r'[aeiouy]+', word):
+            count += 1
+            vowel_groups.append(m.group())
+        #if e is at the end of a word which is longer than 2 letters, then usually it is not a syllable
+        #however if the word ends with he or phe, then the ending e makes a syllable. 
+        if vowel_groups[-1] == 'e' and word[-1] == 'e' and len(word) > 2 and word[-2]!= 'h':
+            count -= 1    
+            
+        return count
+    def syllable_stress(self,pron):
+        s = []
+        for i in range(len(pron)):
+            phone = pron[i]
+            for char in phone:
+                if char.isdigit():
+                    s.append(int(char))
+        return s
+
+    def feet_check(self, text, num_feet):
+        text = text.strip(punctuation)
+        words = self.apostrophe_tokenize(text)
+        # print(words)
+        stress_list = []
+        prons_list = []
+        for word in words:
+            if self._pronunciations.get(self._normalize(word), [])!=[]:
+                prons_list.append(self._pronunciations.get(self._normalize(word), []))        
+        def recur_loop(prons_list, n, stress_list, num_feet, flag):
+            if n < len(prons_list):
+                l = len(prons_list[n])
+                for i in range(l):                
+                    # print('stress: ',stress_list)
+                    # print('len: ',len(stress_list))
+                    s = self.syllable_stress(prons_list[n][i])    
+                    # print('new: ',s)
+                    # print('n = ' + str(n) + ' out of ' + str(len(prons_list)))
+                    flag = recur_loop(prons_list, n + 1, stress_list + s, num_feet, flag)
+                    # print(flag)
+                    if flag:
+                        return True
+            else: 
+                # print(stress_list)              
+                if len(stress_list) != 3*num_feet:
+                    return False
+                for j in range(num_feet):
+                    if sum(stress_list[3*j:3*j+3]) != 1: 
+                        return False
+                
+                return True
+
+            return flag
+        flag = False
+        flag = recur_loop(prons_list,0,stress_list, num_feet, flag)
+
+        # print('recursive gives me: ',flag)
+        return flag
+    
+    
+    def syllable_limerick(self, text):
+        text = text.strip()
+        lines = text.split('\n')
+        l = len(lines)
+        if l != 5:
+            return False
+        last = self.last_words(lines)
+        if not self.rhymes(last[0],last[1]):
+            # print('0 1: ',self.rhymes(last[0],last[1]))
+            return False
+        if not self.rhymes(last[0],last[4]):
+            # print('0 4: ',self.rhymes(last[0],last[4]))
+            return False
+        if not self.rhymes(last[1],last[4]):
+            # print('1 4: ',self.rhymes(last[1],last[4]))
+            return False   
+        if not self.rhymes(last[2],last[3]):
+            # print('2 3: ',self.rhymes(last[2],last[3]))
+            return False
+
+        for i in [0,1,4]:
+            if not self.feet_check(lines[i],3):
+                return False
+        for i in [2,3]:
+            if not self.feet_check(lines[i],2):
+                return False
+ 
+            
         
+        return True        
+
+            
+
 if __name__ == "__main__":
     ld = LimerickDetector()
 
@@ -189,6 +288,7 @@ if __name__ == "__main__":
 
     # for key, values in ld._pronunciations.items():
     #     ld.num_syllables(key)
+
     
     for display, func in [["Syllables", ld.num_syllables],
                           ["After Stressed", lambda x: list(ld.after_stressed(x))],
@@ -202,3 +302,18 @@ if __name__ == "__main__":
         print("=========\n")
         print(limerick)
         print("Truth: %s\tResult: %s" % (result, ld.is_limerick(limerick)))
+        print("Truth of syllable_limerick: %s\tResult: %s" % (result, ld.syllable_limerick(limerick)))
+    # aa = 'regression'
+    # bb = 'question'
+    # cc = 'depression'
+    # dd = 'session'
+    # ee = 'profession'
+    # ff = 'progression'
+    # print(ld.rhymes(aa,bb))
+    # print(ld.rhymes(aa,cc))
+    # print(ld.rhymes(aa,dd))
+    # print(ld.rhymes(aa,ee))
+    # print(ld.rhymes(aa,ff))
+    # print(ld._pronunciations[aa])
+    # print(ld._pronunciations[bb])
+    
