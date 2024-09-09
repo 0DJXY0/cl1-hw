@@ -6,8 +6,13 @@ import typing
 from numpy import mean
 
 import nltk
+import itertools
+import string
 from nltk import FreqDist
 from nltk.util import bigrams
+import hashlib
+# nltk.download('brown')
+# nltk.download('gutenberg')
 
 kLM_ORDER = 2
 kUNK_CUTOFF = 3
@@ -105,7 +110,66 @@ class BigramLanguageModel:
         sample_size -- How many tokens to generate from the model
         """
         return ""                                                      
-            
+    def decode(self,rep):
+        primeDict = {}
+
+        i = 2
+        while i**2 <= rep:
+            if rep % i != 0:
+                i += 1
+            else:
+                rep = rep//i
+                try:
+                    primeDict[i] += 1
+                except KeyError:
+                    primeDict[i] = 1
+
+        if rep > 1:
+            try:
+                primeDict[rep] += 1
+            except KeyError:
+                primeDict[rep] = 1
+        word = ''
+        # print(primeDict)
+        for key, value in primeDict.items():
+            word += string.ascii_lowercase[value-1] 
+        return word
+               
+    def encode(self, word: str) -> int:
+        word = word.lower()
+        def prime_generator():
+            primes = {}
+            prime = 2
+            while True:
+                if prime in primes:
+                    for p in primes[prime]:
+                        primes.setdefault(p + prime, []).append(p)
+                    primes.pop(prime)
+                    # del primes[prime]                
+                else:
+                    yield prime
+                    primes[prime * prime] = [prime]
+                
+                prime += 1        
+        primes = []
+        n = len(word)
+        primes = list(itertools.islice(prime_generator(), n))
+        # print(primes)
+        letters = []
+        for i in range(n):
+            letters.append(string.ascii_lowercase.index(word[i])+1)
+        # print(letters)
+        rep = 1
+        flrep = 1.0
+        for i in range(n):
+            # print(primes[i]**(letters[i]))
+            rep *= primes[i]**(letters[i])
+            flrep *= primes[i]**(letters[i])
+
+
+        return rep
+
+
     def vocab_lookup(self, word: str) -> token:
         """
         Given a word, provides a vocabulary representation.  Words under the
@@ -114,6 +178,14 @@ class BigramLanguageModel:
         """
         assert self._vocab_final, \
             "Vocab must be finalized before looking up words"
+        
+        if word == kSTART:
+            rep = -2
+        elif word == kEND:
+            rep = -3
+        elif self._training_counts[word] < self._unk_cutoff:
+            rep = -1
+
 
         if word in self._vocab:
             return word
@@ -300,8 +372,17 @@ if __name__ == "__main__":
                              kn_discount=args.kn_discount)
 
     for sent in nltk.corpus.brown.sents():
-        for word in sent:
+        for word in sent:            
             lm.train_seen(lm.standardize(word))
+    sents = nltk.corpus.brown.sents()
+    # print(sents[0])
+    # print(lm._training_counts[kEND])
+    rep = lm.encode('define')
+    # print('rep: ',rep)
+    print(lm.decode(rep))
+
+
+    raise KeyboardInterrupt
 
     print("Done looking at all the words, finalizing vocabulary")
     lm.finalize()
@@ -346,3 +427,4 @@ if __name__ == "__main__":
                 print("%10s\t%10s\t%03.4f" % (ii, jj, kk))
             print("Perplexity: %0.4f" % lm.perplexity(censored, method))
             print("----------------")
+    
