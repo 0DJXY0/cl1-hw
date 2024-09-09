@@ -20,6 +20,7 @@ kNEG_INF = -1e6
 
 kSTART = "<S>"
 kEND = "</S>"
+kUNK = "<UNK>"
 
 token = int | str
 
@@ -112,7 +113,13 @@ class BigramLanguageModel:
         return ""                                                      
     def decode(self,rep):
         primeDict = {}
-
+        if rep == -1:
+            return kUNK
+        elif rep == -2:
+            return kSTART
+        elif rep == -3:
+            return kEND
+        
         i = 2
         while i**2 <= rep:
             if rep % i != 0:
@@ -132,7 +139,10 @@ class BigramLanguageModel:
         word = ''
         # print(primeDict)
         for key, value in primeDict.items():
-            word += string.ascii_lowercase[value-1] 
+            try:
+                word += string.ascii_lowercase[value-1] 
+            except ValueError:
+                return kUNK
         return word
                
     def encode(self, word: str) -> int:
@@ -157,7 +167,10 @@ class BigramLanguageModel:
         # print(primes)
         letters = []
         for i in range(n):
-            letters.append(string.ascii_lowercase.index(word[i])+1)
+            try:
+                letters.append(string.ascii_lowercase.index(word[i])+1)
+            except ValueError:
+                return -1
         # print(letters)
         rep = 1
         flrep = 1.0
@@ -178,17 +191,18 @@ class BigramLanguageModel:
         """
         assert self._vocab_final, \
             "Vocab must be finalized before looking up words"
-        
+        # print(word)
         if word == kSTART:
             rep = -2
         elif word == kEND:
             rep = -3
         elif self._training_counts[word] < self._unk_cutoff:
             rep = -1
-
+        else:
+            rep = self.encode(word)
 
         if word in self._vocab:
-            return word
+            return rep
         else:
             return None
 
@@ -222,6 +236,7 @@ class BigramLanguageModel:
         """
         yield self.vocab_lookup(kSTART)
         for word in sentence:
+            # if all(isinstance(w, int) for w in word):
             yield self.vocab_lookup(self.standardize(word))
         yield self.vocab_lookup(kEND)
 
@@ -320,6 +335,7 @@ class BigramLanguageModel:
         # will hopefully get you started.
         for context, word in bigrams(self.censor(sentence)):
             None
+            
             # ---------------------------------------
 
     def perplexity(self, sentence: str, method: typing.Callable) -> float:
@@ -329,10 +345,11 @@ class BigramLanguageModel:
         sentence -- The sentence we compute the perplexity for
         method -- The estimator function
         """
-
+        # print('sentence: ',sentence)
         # You don't have to modify this function
         return 2.0 ** (-1.0 * mean([method(context, word) for context, word in \
-                                    bigrams(self.censor(sentence))]))
+                                    bigrams(sentence)]))
+                                    # bigrams(self.censor(sentence))]))
 
 
 if __name__ == "__main__":
@@ -375,18 +392,23 @@ if __name__ == "__main__":
         for word in sent:            
             lm.train_seen(lm.standardize(word))
     sents = nltk.corpus.brown.sents()
-    # print(sents[0])
+    print(sents[0])
+
     # print(lm._training_counts[kEND])
     rep = lm.encode('define')
     # print('rep: ',rep)
     print(lm.decode(rep))
-
-
-    raise KeyboardInterrupt
+  
+    # raise KeyboardInterrupt
+    
 
     print("Done looking at all the words, finalizing vocabulary")
     lm.finalize()
 
+    # g = lm.censor(sents[0])
+    # print(list(g))
+
+    # raise KeyboardInterrupt
     sentence_count = 0
     for sent in nltk.corpus.brown.sents():
         sentence_count += 1
@@ -422,7 +444,7 @@ if __name__ == "__main__":
             sent = sentences[sent_index]
             original = list(sent)
             censored = list(lm.censor(original))
-
+            print('censored: ',censored)
             for ii, jj, kk in zip([""] + original, censored, [0.0] + [method(censored[ii-1], censored[ii]) for ii in range(1, len(censored))]):
                 print("%10s\t%10s\t%03.4f" % (ii, jj, kk))
             print("Perplexity: %0.4f" % lm.perplexity(censored, method))
