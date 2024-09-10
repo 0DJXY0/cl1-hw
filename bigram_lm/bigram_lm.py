@@ -84,11 +84,11 @@ class BigramLanguageModel:
 
         # Add your code here!        
         # Bigram counts        
-
+        self._bi_counts = FreqDist()
         # Unigram counts
-
+        self._uni_counts = FreqDist()
         # Prefix counts
-
+        self._pref_counts = FreqDist()
     def train_seen(self, word: str, count: int=1):
         """
         Tells the language model that a word has been seen @count times.  This
@@ -192,16 +192,16 @@ class BigramLanguageModel:
         assert self._vocab_final, \
             "Vocab must be finalized before looking up words"
         # print(word)
-        if word == kSTART:
-            rep = -2
-        elif word == kEND:
-            rep = -3
-        elif self._training_counts[word] < self._unk_cutoff:
-            rep = -1
-        else:
-            rep = self.encode(word)
-
+        
         if word in self._vocab:
+            if word == kSTART:
+                rep = -2
+            elif word == kEND:
+                rep = -3
+            elif self._training_counts[word] < self._unk_cutoff:
+                rep = -1
+            else:
+                rep = self.encode(word)
             return rep
         else:
             return None
@@ -334,7 +334,12 @@ class BigramLanguageModel:
         # You'll need to complete this function, but here's a line of code that
         # will hopefully get you started.
         for context, word in bigrams(self.censor(sentence)):
-            None
+            print(context)
+            print(word)
+            bi = context + ' ' + word
+            self._bi_counts[bi] += 1
+            self._uni_counts[word] += 1
+            self._uni_counts[context] += 1
             
             # ---------------------------------------
 
@@ -391,13 +396,13 @@ if __name__ == "__main__":
     for sent in nltk.corpus.brown.sents():
         for word in sent:            
             lm.train_seen(lm.standardize(word))
-    sents = nltk.corpus.brown.sents()
-    print(sents[0])
+    # sents = nltk.corpus.brown.sents()
+    # print(sents[0])
 
     # print(lm._training_counts[kEND])
-    rep = lm.encode('define')
+    # rep = lm.encode('define')
     # print('rep: ',rep)
-    print(lm.decode(rep))
+    # print(lm.decode(rep))
   
     # raise KeyboardInterrupt
     
