@@ -81,6 +81,7 @@ class BigramLanguageModel:
         self._standardizer = standardize_function
         
         self._training_counts = FreqDist()
+        self._vocab_len = 0
 
         # Add your code here!        
         # Bigram counts        
@@ -101,7 +102,7 @@ class BigramLanguageModel:
         assert not self._vocab_final, \
             "Trying to add new words to finalized vocab"
 
-        self._training_counts[self.encode(word)] += count
+        self._training_counts[word] += count
 
             
     def sample(self, sample_size: int) -> typing.Iterator[str]:
@@ -192,8 +193,8 @@ class BigramLanguageModel:
         assert self._vocab_final, \
             "Vocab must be finalized before looking up words"
         # print(word)
-        print('vocab: ',self._vocab)
-        if self.encode(word) in self._vocab:
+        # print('vocab: ',self._vocab)
+        if word in self._vocab:
             if word == kSTART:
                 rep = -2
             elif word == kEND:
@@ -222,7 +223,7 @@ class BigramLanguageModel:
         # You may want to add code here because it's at this point you know
         # the vocab size
         # -------------------------------------------------------------------
-
+        self._vocab_len = self.vocab_size()
         assert self.vocab_lookup(kSTART) is not None, "Missing start"
         assert self.vocab_lookup(kEND) is not None, "Missing end"
         
@@ -278,7 +279,7 @@ class BigramLanguageModel:
         if obs == 0 or cont == 0:
             return kNEG_INF
         else:
-            return log(obs) - log(cont)
+            return lg(obs/cont)
 
 
     def laplace(self, context: token, word: token):
@@ -294,7 +295,7 @@ class BigramLanguageModel:
         bi = str(context) + ' ' + str(word)
         self._bi_counts[bi]
         if context in self._uni_counts:
-            cont = self._uni_counts[context] + 1
+            cont = self._uni_counts[context] + len(self._uni_counts)
         else:
             cont = 1
 
@@ -303,12 +304,12 @@ class BigramLanguageModel:
         else:
             obs = 1
 
-        # print('obs: ',obs)
-        # print('cont: ', cont)
+        print('obs: ',obs)
+        print('cont: ', cont)
         if obs == 0 or cont == 0:
             return kNEG_INF
         else:
-            return log(obs) - log(cont)
+            return lg(obs/cont)
 
     def jelinek_mercer(self, context, word):
         """
@@ -322,7 +323,26 @@ class BigramLanguageModel:
 
         # This initially return 0.0, ignoring the word and context.
         # Modify this code to return the correct value.                
-        return 0.0
+        bi = str(context) + ' ' + str(word)
+        self._bi_counts[bi]
+        if context in self._uni_counts:
+            cont = self._uni_counts[context] 
+        else:
+            cont = 0
+
+        if bi in self._bi_counts:
+            obs = self._bi_counts[bi] 
+        else:
+            obs = 0
+
+        print('obs: ',obs)
+        print(obs/len(self._uni_counts))
+        print('cont: ', cont)
+        print(self._jm_lambda*obs/len(self._uni_counts) + (1-self._jm_lambda)*obs/cont)
+        if cont == 0:
+            return kNEG_INF
+        else:
+            return lg((1-self._jm_lambda)*self._uni_counts[word]/len(self._uni_counts) + self._jm_lambda*obs/cont)
 
         
           
@@ -337,7 +357,27 @@ class BigramLanguageModel:
         """
         # This initially return 0.0, ignoring the word and context.
         # Modify this code to return the correct value.
-        return 0.0
+        bi = str(context) + ' ' + str(word)
+        self._bi_counts[bi]
+        if context in self._uni_counts:
+            cont = self._uni_counts[context] 
+        else:
+            cont = 0
+
+        if bi in self._bi_counts:
+            obs = self._bi_counts[bi] 
+        else:
+            obs = 0
+
+        print('obs: ',obs)
+        print(obs/len(self._uni_counts))
+        print('cont: ', cont)
+        print(self._jm_lambda*obs/len(self._uni_counts) + (1-self._jm_lambda)*obs/cont)
+        # p = max(obs - self._kn_discount, 0)/self._pref_counts[context] + self._kn_concentration* self._uni_counts[word]/len(self._uni_counts)   
+        q = self._uni_counts[word]/(len(self._uni_counts)+self._kn_concentration) + self._kn_concentration/(len(self._uni_counts)+self._kn_concentration)/self._vocab_len
+        p = max(obs - self._kn_discount, 0)/(self._uni_counts[context] + self._kn_concentration) + \
+                self._kn_concentration/(self._uni_counts[context] + self._kn_concentration)*q     
+        return lg(p)
 
     
     def dirichlet(self, context: token, word: token) -> float:
@@ -353,7 +393,7 @@ class BigramLanguageModel:
         bi = str(context) + ' ' + str(word)
         self._bi_counts[bi]
         if context in self._uni_counts:
-            cont = self._uni_counts[context] + self._dirichlet_alpha
+            cont = self._uni_counts[context] + self._dirichlet_alpha*len(self._uni_counts)
         else:
             cont = self._dirichlet_alpha
 
@@ -362,12 +402,12 @@ class BigramLanguageModel:
         else:
             obs = self._dirichlet_alpha
 
-        # print('obs: ',obs)
-        # print('cont: ', cont)
+        print('obs: ',obs)
+        print('cont: ', cont)
         if obs == 0 or cont == 0:
             return kNEG_INF
         else:
-            return log(obs) - log(cont)
+            return lg(obs/cont)
 
     def vocab_size(self) -> int:
         """
@@ -384,17 +424,17 @@ class BigramLanguageModel:
 
         # You'll need to complete this function, but here's a line of code that
         # will hopefully get you started.
-        print(sentence)
+        print('original: ',sentence)
         print(list(self.censor(sentence)))
         for context, word in bigrams(self.censor(sentence)):
-            print(context)
-            print(word)
+            # print(context)
+            # print('word: ',word)
             bi = str(context) + ' ' + str(word)
             self._bi_counts[bi] += 1
-            self._uni_counts[word] += 1
             self._uni_counts[context] += 1
-            self._training_counts[word] += 1
-            self._training_counts[context] += 1
+            self._pref_counts[context] += 1
+            last = word
+        self._uni_counts[last] += 1
             # ---------------------------------------
 
     def perplexity(self, sentence: str, method: typing.Callable) -> float:
