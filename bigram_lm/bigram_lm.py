@@ -101,7 +101,7 @@ class BigramLanguageModel:
         assert not self._vocab_final, \
             "Trying to add new words to finalized vocab"
 
-        self._training_counts[word] += count
+        self._training_counts[self.encode(word)] += count
 
             
     def sample(self, sample_size: int) -> typing.Iterator[str]:
@@ -192,8 +192,8 @@ class BigramLanguageModel:
         assert self._vocab_final, \
             "Vocab must be finalized before looking up words"
         # print(word)
-        
-        if word in self._vocab:
+        print('vocab: ',self._vocab)
+        if self.encode(word) in self._vocab:
             if word == kSTART:
                 rep = -2
             elif word == kEND:
@@ -204,7 +204,7 @@ class BigramLanguageModel:
                 rep = self.encode(word)
             return rep
         else:
-            return None
+            return -1
 
     def finalize(self):
         """
@@ -236,7 +236,6 @@ class BigramLanguageModel:
         """
         yield self.vocab_lookup(kSTART)
         for word in sentence:
-            # if all(isinstance(w, int) for w in word):
             yield self.vocab_lookup(self.standardize(word))
         yield self.vocab_lookup(kEND)
 
@@ -262,7 +261,25 @@ class BigramLanguageModel:
 
         # This initially return 0.0, ignoring the word and context.
         # Modify this code to return the correct value.        
-        return 0.0
+        bi = str(context) + ' ' + str(word)
+        self._bi_counts[bi]
+        if context in self._uni_counts:
+            cont = self._uni_counts[context] + 0
+        else:
+            cont = 0
+
+        if bi in self._bi_counts:
+            obs = self._bi_counts[bi] + 0
+        else:
+            obs = 0
+
+        # print('obs: ',obs)
+        # print('cont: ', cont)
+        if obs == 0 or cont == 0:
+            return kNEG_INF
+        else:
+            return log(obs) - log(cont)
+
 
     def laplace(self, context: token, word: token):
         """
@@ -274,7 +291,24 @@ class BigramLanguageModel:
 
         # This initially return 0.0, ignoring the word and context.
         # Modify this code to return the correct value.                    
-        return 0.0
+        bi = str(context) + ' ' + str(word)
+        self._bi_counts[bi]
+        if context in self._uni_counts:
+            cont = self._uni_counts[context] + 1
+        else:
+            cont = 1
+
+        if bi in self._bi_counts:
+            obs = self._bi_counts[bi] + 1
+        else:
+            obs = 1
+
+        # print('obs: ',obs)
+        # print('cont: ', cont)
+        if obs == 0 or cont == 0:
+            return kNEG_INF
+        else:
+            return log(obs) - log(cont)
 
     def jelinek_mercer(self, context, word):
         """
@@ -316,7 +350,24 @@ class BigramLanguageModel:
         """
         # This initially return 0.0, ignoring the word and context.
         # Modify this code to return the correct value.
-        return 0.0
+        bi = str(context) + ' ' + str(word)
+        self._bi_counts[bi]
+        if context in self._uni_counts:
+            cont = self._uni_counts[context] + self._dirichlet_alpha
+        else:
+            cont = self._dirichlet_alpha
+
+        if bi in self._bi_counts:
+            obs = self._bi_counts[bi] + self._dirichlet_alpha
+        else:
+            obs = self._dirichlet_alpha
+
+        # print('obs: ',obs)
+        # print('cont: ', cont)
+        if obs == 0 or cont == 0:
+            return kNEG_INF
+        else:
+            return log(obs) - log(cont)
 
     def vocab_size(self) -> int:
         """
@@ -333,14 +384,17 @@ class BigramLanguageModel:
 
         # You'll need to complete this function, but here's a line of code that
         # will hopefully get you started.
+        print(sentence)
+        print(list(self.censor(sentence)))
         for context, word in bigrams(self.censor(sentence)):
             print(context)
             print(word)
-            bi = context + ' ' + word
+            bi = str(context) + ' ' + str(word)
             self._bi_counts[bi] += 1
             self._uni_counts[word] += 1
             self._uni_counts[context] += 1
-            
+            self._training_counts[word] += 1
+            self._training_counts[context] += 1
             # ---------------------------------------
 
     def perplexity(self, sentence: str, method: typing.Callable) -> float:
