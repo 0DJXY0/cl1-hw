@@ -58,14 +58,14 @@ class TestSequenceFunctions(unittest.TestCase):
         self.assertEqual(censored_a[2], censored_b[1])
 
     def test_lm(self):
-        print('uni:',list(self.lm._training_counts))
+        print('uni:',list(self.lm._uni_counts))
         self.lm.train_seen("a", 300)
-        print('uni:',list(self.lm._training_counts))
+        print('uni:',list(self.lm._uni_counts))
         self.lm.finalize()
 
 
         self.lm.add_train(['a', 'a', 'b'])
-        print('uni:',list(self.lm._training_counts))
+        print('uni:',list(self.lm._uni_counts))
         # Test MLE
         word_start = self.lm.vocab_lookup(kSTART)
         word_end = self.lm.vocab_lookup(kEND)
@@ -73,7 +73,8 @@ class TestSequenceFunctions(unittest.TestCase):
         word_b = self.lm.vocab_lookup("b")
         word_c = self.lm.vocab_lookup("c")
         print('bi:',list(self.lm._bi_counts))
-        print('uni:',list(self.lm._training_counts))
+        print('uni:',list(self.lm._uni_counts))
+        print('vocab: ',self.lm._vocab)
         self.assertAlmostEqual(self.lm.mle(word_start, word_b), kNEG_INF)
         self.assertAlmostEqual(self.lm.mle(word_start, word_a), lg(1.0))
         self.assertAlmostEqual(self.lm.mle(word_a, word_a), lg(0.5))
