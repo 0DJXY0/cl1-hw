@@ -4,13 +4,14 @@ import argparse
 import typing
 
 from numpy import mean
-
+import numpy as np
 import nltk
 import itertools
 import string
 from nltk import FreqDist
 from nltk.util import bigrams
 import hashlib
+from scipy.special import softmax
 # nltk.download('brown')
 # nltk.download('gutenberg')
 
@@ -42,8 +43,17 @@ def dict_sample(d: typing.Dict, cutoff: int =-1):
     #TODO(only for extra credit): Implement this function
     
     from random import random
+    n = len(d)
+    keys = list(d)
+    distribution = np.zeros(n)
+    for i in range(n):
+        distribution[i] = d[keys[i]]
+    distribution = softmax(distribution)
+    return np.random.choice(keys,p = distribution)
 
-
+test_dict = dict()
+for i in range(100):
+    test_dict[i] = i
 
 class BigramLanguageModel:
 
@@ -114,7 +124,21 @@ class BigramLanguageModel:
         
         sample_size -- How many tokens to generate from the model
         """
-        return ""                                                      
+        context = self.vocab_lookup(kSTART)
+        sentence = ''
+        
+        for i in range(sample_size):     
+            prob_dict = dict()
+            for next in self._vocab:   
+                word = self.vocab_lookup(next)
+                if word != -1:
+                    prob_dict[word] = exp(self.jelinek_mercer(context,word))
+            identifier = dict_sample(prob_dict)
+            sentence += str(self.decode(identifier)) + ' '
+            context = identifier
+
+
+        return sentence                                                      
     def decode(self,rep):
         primeDict = {}
         if rep == -1:
@@ -529,6 +553,8 @@ if __name__ == "__main__":
     # Build the test corpus
     num_sentences = len(nltk.corpus.gutenberg.sents())
     print('num_sentences: ',num_sentences)
+    print(lm.sample(10))
+    # raise KeyboardInterrupt
     args.test_limit = 100 
     if args.test_limit > 0:
         from random import sample
