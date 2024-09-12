@@ -11,9 +11,9 @@ import string
 from nltk import FreqDist
 from nltk.util import bigrams
 import hashlib
-from scipy.special import softmax
-# nltk.download('brown')
-# nltk.download('gutenberg')
+
+nltk.download('brown')
+nltk.download('gutenberg')
 
 kLM_ORDER = 2
 kUNK_CUTOFF = 3
@@ -48,7 +48,7 @@ def dict_sample(d: typing.Dict, cutoff: int =-1):
     distribution = np.zeros(n)
     for i in range(n):
         distribution[i] = d[keys[i]]
-    distribution = softmax(distribution)
+    distribution = np.exp(distribution)/sum(np.exp(distribution))
     return np.random.choice(keys,p = distribution)
 
 test_dict = dict()
@@ -132,7 +132,7 @@ class BigramLanguageModel:
             for next in self._vocab:   
                 word = self.vocab_lookup(next)
                 if word != -1:
-                    prob_dict[word] = exp(self.jelinek_mercer(context,word))
+                    prob_dict[word] = 2**(self.jelinek_mercer(context,word))
             identifier = dict_sample(prob_dict)
             sentence += str(self.decode(identifier)) + ' '
             context = identifier
@@ -357,7 +357,7 @@ class BigramLanguageModel:
         if cont == 0:
             return kNEG_INF
         else:
-            return lg(self._jm_lambda*self._uni_counts[word]/len(self._uni_counts) + (1-self._jm_lambda)*obs/cont)
+            return lg(self._jm_lambda*self._uni_counts[word]/self._test_len + (1-self._jm_lambda)*obs/cont)
 
         
           
