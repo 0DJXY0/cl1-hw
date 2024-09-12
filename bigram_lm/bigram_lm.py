@@ -1,5 +1,5 @@
 from math import log, exp
-from collections import defaultdict
+from collections import defaultdict, OrderedDict
 import argparse
 import typing
 
@@ -82,7 +82,10 @@ class BigramLanguageModel:
         
         self._training_counts = FreqDist()
         self._vocab_len = 0
+        self._test_len = 0
 
+        self._res = dict()
+        self._res['uni'] = []
         # Add your code here!        
         # Bigram counts        
         self._bi_counts = FreqDist()
@@ -155,8 +158,7 @@ class BigramLanguageModel:
                 if prime in primes:
                     for p in primes[prime]:
                         primes.setdefault(p + prime, []).append(p)
-                    primes.pop(prime)
-                    # del primes[prime]                
+                    primes.pop(prime)            
                 else:
                     yield prime
                     primes[prime * prime] = [prime]
@@ -165,18 +167,15 @@ class BigramLanguageModel:
         primes = []
         n = len(word)
         primes = list(itertools.islice(prime_generator(), n))
-        # print(primes)
         letters = []
         for i in range(n):
             try:
                 letters.append(string.ascii_lowercase.index(word[i])+1)
             except ValueError:
                 return -1
-        # print(letters)
         rep = 1
         flrep = 1.0
         for i in range(n):
-            # print(primes[i]**(letters[i]))
             rep *= primes[i]**(letters[i])
             flrep *= primes[i]**(letters[i])
 
@@ -274,8 +273,6 @@ class BigramLanguageModel:
         else:
             obs = 0
 
-        # print('obs: ',obs)
-        # print('cont: ', cont)
         if obs == 0 or cont == 0:
             return kNEG_INF
         else:
@@ -304,8 +301,6 @@ class BigramLanguageModel:
         else:
             obs = 1
 
-        print('obs: ',obs)
-        print('cont: ', cont)
         if obs == 0 or cont == 0:
             return kNEG_INF
         else:
@@ -335,14 +330,10 @@ class BigramLanguageModel:
         else:
             obs = 0
 
-        print('obs: ',obs)
-        print(obs/len(self._uni_counts))
-        print('cont: ', cont)
-        print(self._jm_lambda*obs/len(self._uni_counts) + (1-self._jm_lambda)*obs/cont)
         if cont == 0:
             return kNEG_INF
         else:
-            return lg((1-self._jm_lambda)*self._uni_counts[word]/len(self._uni_counts) + self._jm_lambda*obs/cont)
+            return lg(self._jm_lambda*self._uni_counts[word]/len(self._uni_counts) + (1-self._jm_lambda)*obs/cont)
 
         
           
@@ -357,6 +348,7 @@ class BigramLanguageModel:
         """
         # This initially return 0.0, ignoring the word and context.
         # Modify this code to return the correct value.
+
         bi = str(context) + ' ' + str(word)
         self._bi_counts[bi]
         if context in self._uni_counts:
@@ -369,14 +361,26 @@ class BigramLanguageModel:
         else:
             obs = 0
 
-        print('obs: ',obs)
-        print(obs/len(self._uni_counts))
-        print('cont: ', cont)
-        print(self._jm_lambda*obs/len(self._uni_counts) + (1-self._jm_lambda)*obs/cont)
+        # print('obs: ',obs)
+        # print(obs/len(self._uni_counts))
+        # print('cont: ', cont)
+        # print('num_uni_counts: ',len(self._uni_counts))
+        
         # p = max(obs - self._kn_discount, 0)/self._pref_counts[context] + self._kn_concentration* self._uni_counts[word]/len(self._uni_counts)   
-        q = self._uni_counts[word]/(len(self._uni_counts)+self._kn_concentration) + self._kn_concentration/(len(self._uni_counts)+self._kn_concentration)/self._vocab_len
-        p = max(obs - self._kn_discount, 0)/(self._uni_counts[context] + self._kn_concentration) + \
-                self._kn_concentration/(self._uni_counts[context] + self._kn_concentration)*q     
+        # q = self._uni_counts[word] / (len(self._uni_counts) -1 + self._kn_concentration) + self._kn_concentration / (len(self._uni_counts) - 1 + self._kn_concentration)/self._test_len
+        # p = (obs - self._kn_discount)/(self._uni_counts[context] + self._kn_concentration) + \
+        #         (self._kn_concentration + len(self._res)*self._kn_discount)/(self._uni_counts[context] + self._kn_concentration)*q     
+        c_u = len(self._res[context])
+        c_null = len(self._res['uni']) 
+        theta = self._kn_concentration
+        delta = self._kn_discount
+
+        c_w = self._res['uni'].count(word)
+
+        q = max(c_w - delta,0)/ (c_null + theta) + (theta + len(set(self._res['uni']))*delta) / (c_null + theta)/len(self._uni_counts)
+        p = max(obs - delta,0)/(c_u + theta) + (theta + len(set(self._res[context]))*self._kn_discount) / (c_u + theta)*q   
+
+        # print('likelihood: ',p)
         return lg(p)
 
     
@@ -402,8 +406,6 @@ class BigramLanguageModel:
         else:
             obs = self._dirichlet_alpha
 
-        print('obs: ',obs)
-        print('cont: ', cont)
         if obs == 0 or cont == 0:
             return kNEG_INF
         else:
@@ -424,16 +426,22 @@ class BigramLanguageModel:
 
         # You'll need to complete this function, but here's a line of code that
         # will hopefully get you started.
-        print('original: ',sentence)
-        print(list(self.censor(sentence)))
+        self._test_len += len(list(self.censor(sentence)))
+
         for context, word in bigrams(self.censor(sentence)):
-            # print(context)
-            # print('word: ',word)
             bi = str(context) + ' ' + str(word)
             self._bi_counts[bi] += 1
             self._uni_counts[context] += 1
             self._pref_counts[context] += 1
             last = word
+            if context not in self._res:
+                self._res[context] = [word]
+                self._res['uni'].append(word)
+            else:
+                if word not in self._res[context]:
+                    self._res['uni'].append(word)
+                self._res[context].append(word)
+
         self._uni_counts[last] += 1
             # ---------------------------------------
 
@@ -520,7 +528,8 @@ if __name__ == "__main__":
 
     # Build the test corpus
     num_sentences = len(nltk.corpus.gutenberg.sents())
-
+    print('num_sentences: ',num_sentences)
+    args.test_limit = 100 
     if args.test_limit > 0:
         from random import sample
         sentence_indices = sample(range(num_sentences), args.test_limit)
@@ -528,7 +537,7 @@ if __name__ == "__main__":
         from random import shuffle
         sentence_indices = list(range(num_sentences))
         shuffle(sentence_indices)        
-    
+    print('sentence_indices: ',sentence_indices)
     for method_name in ['kneser_ney', 'mle', 'dirichlet', 'jelinek_mercer', 'laplace']:
         print("======================")
         print("      %s" % method_name)
@@ -538,14 +547,25 @@ if __name__ == "__main__":
 
         from random import shuffle
         sentences = nltk.corpus.gutenberg.sents()
-
+        low5 = OrderedDict()
         for sent_index in sentence_indices:
             sent = sentences[sent_index]
             original = list(sent)
             censored = list(lm.censor(original))
-            print('censored: ',censored)
+            # print('censored: ',censored)
             for ii, jj, kk in zip([""] + original, censored, [0.0] + [method(censored[ii-1], censored[ii]) for ii in range(1, len(censored))]):
                 print("%10s\t%10s\t%03.4f" % (ii, jj, kk))
-            print("Perplexity: %0.4f" % lm.perplexity(censored, method))
+            pp =  lm.perplexity(censored, method)   
+            print("Perplexity: %0.4f" % pp)
+            low5[pp] = sent_index
+            if len(low5) > 5:
+                low5.popitem()
             print("----------------")
+        with open('output.txt','a+') as f:
+            f.write("5 sentences with the lowest perplexity using method " + method_name + '\n')
+            for key, value in low5.items():
+                sent = sentences[value]
+                # print(str(list(sent)) + ' perplexity: ' + str(key))
+                f.write(str(list(sent)) + ' perplexity: ' + str(key) + '\n')
+        
     

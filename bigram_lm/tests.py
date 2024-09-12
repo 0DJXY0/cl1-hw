@@ -50,7 +50,7 @@ class TestSequenceFunctions(unittest.TestCase):
         self.assertEqual(censored_b, censored_d)
 
         # Should add start and end tag
-        print(censored_a)
+        # print(censored_a)
         self.assertEqual(len(censored_a), 5)
         self.assertEqual(censored_a[0], censored_b[0])
         self.assertEqual(censored_a[-1], censored_b[-1])
@@ -58,23 +58,23 @@ class TestSequenceFunctions(unittest.TestCase):
         self.assertEqual(censored_a[2], censored_b[1])
 
     def test_lm(self):
-        print('uni:',list(self.lm._uni_counts))
+        # print('uni:',list(self.lm._uni_counts))
         self.lm.train_seen("a", 300)
-        print('uni:',list(self.lm._uni_counts))
+        # print('uni:',list(self.lm._uni_counts))
         self.lm.finalize()
 
 
         self.lm.add_train(['a', 'a', 'b'])
-        print('uni:',list(self.lm._uni_counts))
+        # print('uni:',list(self.lm._uni_counts))
         # Test MLE
         word_start = self.lm.vocab_lookup(kSTART)
         word_end = self.lm.vocab_lookup(kEND)
         word_a = self.lm.vocab_lookup("a")
         word_b = self.lm.vocab_lookup("b")
         word_c = self.lm.vocab_lookup("c")
-        print('bi:',list(self.lm._bi_counts))
-        print('uni:',list(self.lm._uni_counts))
-        print('vocab: ',self.lm._vocab)
+        # print('bi:',list(self.lm._bi_counts))
+        # print('uni:',list(self.lm._uni_counts))
+        # print('vocab: ',self.lm._vocab)
         self.assertAlmostEqual(self.lm.mle(word_start, word_b), kNEG_INF)
         self.assertAlmostEqual(self.lm.mle(word_start, word_a), lg(1.0))
         self.assertAlmostEqual(self.lm.mle(word_a, word_a), lg(0.5))
