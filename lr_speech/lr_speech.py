@@ -57,7 +57,7 @@ def create_dataset(soundfile_dict, vowels, num_mfccs):
 
     """
 
-    dataset = zeros((len(mfcc[vowels[0]])+len(mfcc[vowels[1]]),num_mfccs+1))
+    # dataset = zeros((len(mfcc[vowels[0]])+len(mfcc[vowels[1]]),num_mfccs+1))
 
     # TODO: Complete this function.  You will need to:
     #
@@ -76,17 +76,18 @@ def create_dataset(soundfile_dict, vowels, num_mfccs):
 
 
     mfcc = {}
-
+    print('loading from soundfile')
     for vowel in vowels:
         for filename in soundfile_dict[vowel]:
             utterance, _ = librosa.load(filename,sr=16000)
-
+            print(utterance)
+    print('finish loading')
     # To use the midpoint frame
-
+    # dataset = zeros((len(mfcc[vowels[0]])+len(mfcc[vowels[1]]),num_mfccs+1))
     # z-score your dataset
 
-    return dataset
-
+    # return dataset
+    return 0
 
 class SimpleLogreg(nn.Module):
     def __init__(self, num_features):
@@ -165,12 +166,12 @@ if __name__ == "__main__":
     directory = args.directory
     num_mfccs = args.num_mfccs
     vowels = args.vowels.split(',')
-
     # Vowels in the dataset (we're only using a subset):
     # ae, ah, aw, eh, ei, er, ih, iy, oa, oo, uh, uw
     files = list_files(directory, vowels)
+    print(files)
     speechdata = create_dataset(files, vowels, num_mfccs)
-
+    raise KeyboardInterrupt
 ## # This is for debugging the speech part without needing pytorch
 ##    X = speechdata[0:,1:]
 ##    y = speechdata[0:,0]
