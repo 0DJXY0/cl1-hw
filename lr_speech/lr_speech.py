@@ -128,8 +128,8 @@ def create_dataset(soundfile_dict, vowels, num_mfccs):
     # z-score your dataset
     dataset[:,1:] = (dataset[:,1:] - np.mean(dataset[:,1:],axis=0))/np.std(dataset[:,1:],axis = 0)
 
-    return dataset
-
+    # return dataset
+    return 0
 
 class SimpleLogreg(nn.Module):
     def __init__(self, num_features):
@@ -213,7 +213,6 @@ if __name__ == "__main__":
     directory = args.directory
     num_mfccs = args.num_mfccs
     vowels = args.vowels.split(',')
-
     # Vowels in the dataset (we're only using a subset):
     # ae, ah, aw, eh, ei, er, ih, iy, oa, oo, uh, uw
     files = list_files(directory, vowels)
