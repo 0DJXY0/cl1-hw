@@ -57,7 +57,7 @@ def create_dataset(soundfile_dict, vowels, num_mfccs):
 
     """
 
-    # dataset = zeros((len(mfcc[vowels[0]])+len(mfcc[vowels[1]]),num_mfccs+1))
+    dataset = zeros((len(soundfile_dict[vowels[0]])+len(soundfile_dict[vowels[1]]),num_mfccs+1))
 
     # TODO: Complete this function.  You will need to:
     #
@@ -66,7 +66,7 @@ def create_dataset(soundfile_dict, vowels, num_mfccs):
     # appropriate data structure
     #
     # 2. Take the midpoint frame from the MFCC matrix.  If there are an even
-    # number of frames in an utterance, take the first of the two midpoint frames.
+    # number of frames in an utterance, take the second of the two midpoint frames.
     #
     # 3. z-score each feature, using the column mean and the column st. dev.
     #
@@ -75,19 +75,20 @@ def create_dataset(soundfile_dict, vowels, num_mfccs):
     # num_features elements in each row are z-scored MFCCs.
 
 
-    mfcc = {}
-    print('loading from soundfile')
     for vowel in vowels:
         for filename in soundfile_dict[vowel]:
             utterance, _ = librosa.load(filename,sr=16000)
-            print(utterance)
-    print('finish loading')
+            mfccs = librosa.feature.mfcc(y=utterance, sr=16000, n_mfcc=num_mfccs, n_fft=512, win_length=400, hop_length=160)
+            print(mfccs)
+            print(mfccs.shape)
+            raise KeyboardInterrupt
+
     # To use the midpoint frame
-    # dataset = zeros((len(mfcc[vowels[0]])+len(mfcc[vowels[1]]),num_mfccs+1))
+
     # z-score your dataset
 
-    # return dataset
-    return 0
+    return dataset
+
 
 class SimpleLogreg(nn.Module):
     def __init__(self, num_features):
@@ -166,18 +167,11 @@ if __name__ == "__main__":
     directory = args.directory
     num_mfccs = args.num_mfccs
     vowels = args.vowels.split(',')
+
     # Vowels in the dataset (we're only using a subset):
     # ae, ah, aw, eh, ei, er, ih, iy, oa, oo, uh, uw
     files = list_files(directory, vowels)
-    print(files)
     speechdata = create_dataset(files, vowels, num_mfccs)
-    raise KeyboardInterrupt
-## # This is for debugging the speech part without needing pytorch
-##    X = speechdata[0:,1:]
-##    y = speechdata[0:,0]
-##
-##    model = LogisticRegression(random_state=0, max_iter=1000).fit(X,y)
-##    model.score(X,y)
 
     train_np, test_np = train_test_split(speechdata, test_size=0.15, random_state=1234)
     train, test = SpeechDataset(train_np), SpeechDataset(test_np)
