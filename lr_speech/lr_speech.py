@@ -74,17 +74,28 @@ def create_dataset(soundfile_dict, vowels, num_mfccs):
     # (0 for the first element of 'vowels', 1 for the second) and the next
     # num_features elements in each row are z-scored MFCCs.
 
-
+    count = 0
     for vowel in vowels:
         for filename in soundfile_dict[vowel]:
+            count += 1
             utterance, _ = librosa.load(filename,sr=16000)
             mfccs = librosa.feature.mfcc(y=utterance, sr=16000, n_mfcc=num_mfccs, n_fft=512, win_length=400, hop_length=160)
-            print(mfccs)
+            # print(dataset)
             print(mfccs.shape)
-            raise KeyboardInterrupt
+            # print(dataset.shape)
+            # print(len(soundfile_dict))
+            # print(soundfile_dict[vowels[0]])
+            # print(num_mfccs)
+            
 
     # To use the midpoint frame
-
+            num_frames = mfccs.shape[1]
+            if num_frames % 2 == 0:
+                idx = num_frames//2 + 1
+            else:
+                idx = num_frames//2
+            dataset[count,1:] = mfccs[:,idx].T
+    raise KeyboardInterrupt
     # z-score your dataset
 
     return dataset
