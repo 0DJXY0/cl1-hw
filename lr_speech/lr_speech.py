@@ -213,6 +213,7 @@ if __name__ == "__main__":
     directory = args.directory
     num_mfccs = args.num_mfccs
     vowels = args.vowels.split(',')
+
     # Vowels in the dataset (we're only using a subset):
     # ae, ah, aw, eh, ei, er, ih, iy, oa, oo, uh, uw
     files = list_files(directory, vowels)
