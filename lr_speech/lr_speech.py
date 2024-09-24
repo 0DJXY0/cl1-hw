@@ -112,7 +112,6 @@ def create_dataset(soundfile_dict, vowels, num_mfccs):
     order = 0
     for vowel in vowels:
         for filename in soundfile_dict[vowel]:
-            count += 1
             utterance, _ = librosa.load(filename,sr=16000)
             mfccs = librosa.feature.mfcc(y=utterance, sr=16000, n_mfcc=num_mfccs, n_fft=512, win_length=400, hop_length=160)
 
