@@ -128,8 +128,8 @@ def create_dataset(soundfile_dict, vowels, num_mfccs):
     # z-score your dataset
     dataset[:,1:] = (dataset[:,1:] - np.mean(dataset[:,1:],axis=0))/np.std(dataset[:,1:],axis = 0)
 
-    # return dataset
-    return 0
+    return dataset
+
 
 class SimpleLogreg(nn.Module):
     def __init__(self, num_features):
