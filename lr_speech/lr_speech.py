@@ -41,6 +41,40 @@ def list_files(directory, vowels):
         soundfile_dict[vowel] = glob.glob(directory+'/*/*'+vowel+'.wav')
 
     return soundfile_dict
+def create_alt_dataset(soundfile_dict, vowels, num_mfccs):
+    dataset = zeros((len(soundfile_dict[vowels[0]])+len(soundfile_dict[vowels[1]]),num_mfccs+1))
+
+    # Alter appoach 1: Take the average of the neighboring frames around the middle frames. By using this the final test acc increase by 10% to be 90%.
+    # Alter appoach 2: I further find by simply using the mean of all the frames as the feature the test acc can be 95%.
+
+    count = 0
+    order = 0
+    half_window = 2
+    for vowel in vowels:
+        for filename in soundfile_dict[vowel]:
+            utterance, _ = librosa.load(filename,sr=16000)
+            mfccs = librosa.feature.mfcc(y=utterance, sr=16000, n_mfcc=num_mfccs, n_fft=512, win_length=400, hop_length=160)
+
+    # To use the midpoint frame
+            num_frames = mfccs.shape[1]
+            if num_frames % 2 == 0:
+                mid = num_frames//2 
+                start = max(0, mid - half_window)
+                end = min(num_frames, mid + half_window)
+            else:
+                mid = num_frames//2
+                start = max(0, mid - half_window)
+                end = min(num_frames, mid + half_window)
+            # avg = np.mean(mfccs[:,start:end],axis=1)
+            avg = np.mean(mfccs[:,:],axis=1)
+            dataset[count,1:] = avg
+            dataset[count,0] = order
+            count += 1
+        order += 1
+    # z-score your dataset
+    dataset[:,1:] = (dataset[:,1:] - np.mean(dataset[:,1:],axis=0))/np.std(dataset[:,1:],axis = 0)
+
+    return dataset
 
 def create_dataset(soundfile_dict, vowels, num_mfccs):
     """
@@ -75,28 +109,25 @@ def create_dataset(soundfile_dict, vowels, num_mfccs):
     # num_features elements in each row are z-scored MFCCs.
 
     count = 0
+    order = 0
     for vowel in vowels:
         for filename in soundfile_dict[vowel]:
             count += 1
             utterance, _ = librosa.load(filename,sr=16000)
             mfccs = librosa.feature.mfcc(y=utterance, sr=16000, n_mfcc=num_mfccs, n_fft=512, win_length=400, hop_length=160)
-            # print(dataset)
-            print(mfccs.shape)
-            # print(dataset.shape)
-            # print(len(soundfile_dict))
-            # print(soundfile_dict[vowels[0]])
-            # print(num_mfccs)
-            
 
     # To use the midpoint frame
             num_frames = mfccs.shape[1]
             if num_frames % 2 == 0:
-                idx = num_frames//2 + 1
+                idx = num_frames//2 
             else:
                 idx = num_frames//2
-            dataset[count,1:] = mfccs[:,idx].T
-    raise KeyboardInterrupt
+            dataset[count,1:] = mfccs[:,idx]
+            dataset[count,0] = order
+            count += 1
+        order += 1
     # z-score your dataset
+    dataset[:,1:] = (dataset[:,1:] - np.mean(dataset[:,1:],axis=0))/np.std(dataset[:,1:],axis = 0)
 
     return dataset
 
@@ -110,7 +141,7 @@ class SimpleLogreg(nn.Module):
         """
         super(SimpleLogreg, self).__init__()
         # TODO: Replace this with a real nn.Module
-        self.linear = None
+        self.linear = nn.Linear(num_features,1,True)
 
     def forward(self, x):
         """
@@ -119,7 +150,8 @@ class SimpleLogreg(nn.Module):
         :param x: Example to evaluate
         """
         # TODO: Complete this function
-        return 0.5
+
+        return torch.sigmoid(self.linear(x))
 
     def evaluate(self, data):
         with torch.no_grad():
@@ -149,7 +181,11 @@ def step(epoch, ex, model, optimizer, criterion, inputs, labels):
     # There's additional code to print updates (for good software
     # engineering practices, this should probably be logging, but
     # printing is good enough for a homework).
-
+    pred = model(inputs)
+    loss = criterion(pred, labels)
+    optimizer.zero_grad()
+    loss.backward()
+    optimizer.step()
 
     if (ex+1) % 20 == 0:
       acc_train = model.evaluate(train)
@@ -182,13 +218,14 @@ if __name__ == "__main__":
     # Vowels in the dataset (we're only using a subset):
     # ae, ah, aw, eh, ei, er, ih, iy, oa, oo, uh, uw
     files = list_files(directory, vowels)
-    speechdata = create_dataset(files, vowels, num_mfccs)
-
+    # speechdata = create_dataset(files, vowels, num_mfccs)
+    speechdata =create_alt_dataset(files, vowels, num_mfccs)
     train_np, test_np = train_test_split(speechdata, test_size=0.15, random_state=1234)
     train, test = SpeechDataset(train_np), SpeechDataset(test_np)
 
     print("Read in %i train and %i test" % (len(train), len(test)))
-
+    # print(train.feature.shape)
+    # raise
     # Initialize model
     logreg = SimpleLogreg(train.n_features)
 
@@ -197,8 +234,8 @@ if __name__ == "__main__":
     total_samples = len(train)
 
     # Replace these with the correct loss and optimizer
-    criterion = None
-    optimizer = None
+    criterion = nn.BCELoss()
+    optimizer = torch.optim.SGD(logreg.parameters(), lr=0.01)
 
     train_loader = DataLoader(dataset=train,
                               batch_size=batch,
