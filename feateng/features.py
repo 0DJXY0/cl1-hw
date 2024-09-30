@@ -112,7 +112,7 @@ class UselessInfo(Feature):
     """
     Feature that computes how long the inputs and outputs of the QA system are.
     """
-
+    
     def __call__(self, question, run, guess, guess_history, other_guesses=None):
         # print('question: ',question)
         # How many characters long is the question?
@@ -161,20 +161,29 @@ class QuestionCategory(Feature):
     """
     Feature that computes how long the inputs and outputs of the QA system are.
     """
+    def __init__(self,name):
+        self.name = name
+        self._category = dict()
+        self.idx = 0
 
     def __call__(self, question, run, guess, guess_history, other_guesses=None):
         # How many characters long is the question?
-
+        cat = 0
 
         # num_useless = log(1+num_useless)
         # How many words long is the question?
-
+        if question['category'] not in self._category:
+            self.idx += 1
+            self._category[question['category']] = self.idx
+            cat = self.idx
+        else:
+            cat = self._category[question['category']]
 
         # How many characters long is the guess?
         if guess is None or guess=="":  
             yield ("guess", -1)         
         else:                           
-            yield ("guess", question['category'])    
+            yield ("guess", cat)    
 
 
 
