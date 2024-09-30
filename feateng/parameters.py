@@ -221,6 +221,26 @@ def load_buzzer(flags, guesser_params, load=False):
             feature = FrequencyFeature(ff)
             feature.add_training("../data/qanta.buzztrain.json.gz")
             buzzer.add_feature(feature)
+        if ff == "LengthRun":
+            from features import LengthRun
+            feature = LengthRun(ff)
+            buzzer.add_feature(feature)
+            features_added.add(ff)
+        if ff == "UselessInfo":
+            from features import UselessInfo
+            feature = UselessInfo(ff)
+            buzzer.add_feature(feature)
+            features_added.add(ff)
+        if ff == "GenderInfo":
+            from features import GenderInfo
+            feature = GenderInfo(ff)
+            buzzer.add_feature(feature)
+            features_added.add(ff)     
+        if ff == "Category":
+            from features import QuestionCategory
+            feature = QuestionCategory(ff)
+            buzzer.add_feature(feature)
+            features_added.add(ff)                
 
     if len(flags.features) != len(features_added):
         error_message = "%i features on command line (%s), but only added %i (%s).  "

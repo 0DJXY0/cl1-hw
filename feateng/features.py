@@ -61,6 +61,25 @@ class LengthFeature(Feature):
         else:                           
             yield ("guess", guess_length)  
 
+class LengthRun(Feature):
+    """
+    Feature that computes how long the inputs and outputs of the QA system are.
+    """
+
+    def __call__(self, question, run, guess, guess_history, other_guesses=None):
+        # How many characters long is the question?
+
+        run_length = 0
+        run_length = log(1 + len(run))
+
+        # How many words long is the question?
+
+
+        # How many characters long is the guess?
+        if run is None or run=="":  
+            yield ("guess", -1)         
+        else:                           
+            yield ("guess", run_length)  
             
 class FrequencyFeature(Feature):
    def __init__(self, name):
@@ -82,17 +101,80 @@ class FrequencyFeature(Feature):
           self.counts[self.normalize(ii["page"])] += 1                    
 
    def __call__(self, question, run, guess, guess_history, other_guesses=None): 
-      print('question: ',question)
-      print('run: ',run)
-      print('guess: ', guess)
-      print('guess_history',guess_history)
-      print('other guesses: ',other_guesses)
-      raise               
+    #   print('question: ',question)
+    #   print('run: ',run)
+    #   print('guess: ', guess)
+    #   print('guess_history',guess_history)
+    #   print('other guesses: ',other_guesses)           
       yield ("guess", log(1 + self.counts[self.normalize(guess)]))        
 
+class UselessInfo(Feature):
+    """
+    Feature that computes how long the inputs and outputs of the QA system are.
+    """
 
+    def __call__(self, question, run, guess, guess_history, other_guesses=None):
+        # print('question: ',question)
+        # How many characters long is the question?
+
+        num_useless = 0
+        useless = ('a','the')
+        for word in run:
+            if word.lower() in useless:
+                num_useless += 1
+
+        # num_useless = log(1+num_useless)
+        # How many words long is the question?
+
+
+        # How many characters long is the guess?
+        if guess is None or guess=="":  
+            yield ("guess", -1)         
+        else:                           
+            yield ("guess", num_useless)   
         
-        
+class GenderInfo(Feature):
+    """
+    Feature that computes how long the inputs and outputs of the QA system are.
+    """
+
+    def __call__(self, question, run, guess, guess_history, other_guesses=None):
+        # How many characters long is the question?
+
+        num_gender = 0
+        gender = ('his','her','him','she','he','male','female','it','its','their','them','theirs')
+        for word in run:
+            if word.lower() in gender:
+                num_gender += 1
+
+        # num_useless = log(1+num_useless)
+        # How many words long is the question?
+
+
+        # How many characters long is the guess?
+        if guess is None or guess=="":  
+            yield ("guess", -1)         
+        else:                           
+            yield ("guess", num_gender)           
+
+class QuestionCategory(Feature):
+    """
+    Feature that computes how long the inputs and outputs of the QA system are.
+    """
+
+    def __call__(self, question, run, guess, guess_history, other_guesses=None):
+        # How many characters long is the question?
+
+
+        # num_useless = log(1+num_useless)
+        # How many words long is the question?
+
+
+        # How many characters long is the guess?
+        if guess is None or guess=="":  
+            yield ("guess", -1)         
+        else:                           
+            yield ("guess", question['category'])    
 
 
 
