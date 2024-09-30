@@ -62,7 +62,33 @@ class LengthFeature(Feature):
             yield ("guess", guess_length)  
 
             
+class FrequencyFeature(Feature):
+   def __init__(self, name):
+      from eval import normalize_answer
+      self.name = name
+      self.counts = Counter()
+      self.normalize = normalize_answer
 
+   def add_training(self, question_source):                                
+      import json                                                         
+      import gzip                                                         
+      if 'json.gz' in question_source:                                    
+          with gzip.open(question_source) as infile:                      
+              questions = json.load(infile)                               
+      else:                                                               
+          with open(question_source) as infile:                           
+              questions = json.load(infile)                               
+      for ii in questions:                                                
+          self.counts[self.normalize(ii["page"])] += 1                    
+
+   def __call__(self, question, run, guess, guess_history, other_guesses=None): 
+      print('question: ',question)
+      print('run: ',run)
+      print('guess: ', guess)
+      print('guess_history',guess_history)
+      print('other guesses: ',other_guesses)
+      raise               
+      yield ("guess", log(1 + self.counts[self.normalize(guess)]))        
 
 
         
