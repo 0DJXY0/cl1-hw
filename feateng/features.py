@@ -61,6 +61,23 @@ class LengthFeature(Feature):
         else:                           
             yield ("guess", guess_length)  
 
+class LengthNormal(Feature):
+   def __init__(self, name):
+      self.name = name
+      self.max_len = 0
+
+   def add_training(self, question_source):                                
+      import json                                                         
+      import gzip                                                         
+      if 'json.gz' in question_source:                                    
+          with gzip.open(question_source) as infile:                      
+              questions = json.load(infile)                               
+      else:                                                               
+          with open(question_source) as infile:                           
+              questions = json.load(infile)                               
+      for ii in questions:                                                
+          self.counts[self.normalize(ii["page"])] += 1   
+
 class LengthRun(Feature):
     """
     Feature that computes how long the inputs and outputs of the QA system are.
@@ -119,7 +136,7 @@ class UselessInfo(Feature):
 
         num_useless = 0
         useless = ('a','the')
-        for word in run:
+        for word in run.split():
             if word.lower() in useless:
                 num_useless += 1
 
@@ -143,7 +160,8 @@ class GenderInfo(Feature):
 
         num_gender = 0
         gender = ('his','her','him','she','he','male','female','it','its','their','them','theirs')
-        for word in run:
+        for word in run.split():
+            # print(word.lower())
             if word.lower() in gender:
                 num_gender += 1
 
@@ -166,28 +184,144 @@ class QuestionCategory(Feature):
         self._category = dict()
         self.idx = 0
 
+    def add_training(self, question_source):                                
+        import json                                                         
+        import gzip                                                         
+        if 'json.gz' in question_source:                                    
+            with gzip.open(question_source) as infile:                      
+                questions = json.load(infile)                               
+        else:                                                               
+            with open(question_source) as infile:                           
+                questions = json.load(infile)                               
+        for ii in questions:
+            if ii['category'] not in self._category:
+                self.idx += 1
+                self._category[ii['category']] = self.idx
+                                              
     def __call__(self, question, run, guess, guess_history, other_guesses=None):
-        # How many characters long is the question?
-        cat = 0
 
-        # num_useless = log(1+num_useless)
-        # How many words long is the question?
-        if question['category'] not in self._category:
-            self.idx += 1
-            self._category[question['category']] = self.idx
-            cat = self.idx
-        else:
-            cat = self._category[question['category']]
-
-        # How many characters long is the guess?
         if guess is None or guess=="":  
             yield ("guess", -1)         
         else:                           
-            yield ("guess", cat)    
+            yield ("guess", self._category[question['category']])    
+
+class Year(Feature):
+    """
+    Feature that computes how long the inputs and outputs of the QA system are.
+    """
+
+    def __call__(self, question, run, guess, guess_history, other_guesses=None):
+
+        if guess is None or guess=="":  
+            yield ("guess", -1)         
+        else:                           
+            yield ("guess", int(question['year'])/2024)          
+
+class Difficulty(Feature):
+    """
+    Feature that computes how long the inputs and outputs of the QA system are.
+    """
+    def __init__(self,name):
+        self.name = name
+        self._difficulty = dict()
+        self.idx = 0
+
+    def add_training(self, question_source):                                
+        import json                                                         
+        import gzip                                                         
+        if 'json.gz' in question_source:                                    
+            with gzip.open(question_source) as infile:                      
+                questions = json.load(infile)                               
+        else:                                                               
+            with open(question_source) as infile:                           
+                questions = json.load(infile)                               
+        for ii in questions:
+            if ii['difficulty'] not in self._difficulty:
+                self.idx += 1
+                self._difficulty[ii['difficulty']] = self.idx
+                                              
+    def __call__(self, question, run, guess, guess_history, other_guesses=None):
+
+        if guess is None or guess=="":  
+            yield ("guess", -1)         
+        else:                           
+            yield ("guess", self._difficulty[question['difficulty']])        
+
+class Tournament(Feature):
+    """
+    Feature that computes how long the inputs and outputs of the QA system are.
+    """
+    def __init__(self,name):
+        self.name = name
+        self._tournament = dict()
+        self.idx = 0
+
+    def add_training(self, question_source):                                
+        import json                                                         
+        import gzip                                                         
+        if 'json.gz' in question_source:                                    
+            with gzip.open(question_source) as infile:                      
+                questions = json.load(infile)                               
+        else:                                                               
+            with open(question_source) as infile:                           
+                questions = json.load(infile)                               
+        for ii in questions:
+            if ii['tournament'] not in self._tournament:
+                self.idx += 1
+                self._tournament[ii['tournament']] = self.idx
+                                              
+    def __call__(self, question, run, guess, guess_history, other_guesses=None):
+
+        if guess is None or guess=="":  
+            yield ("guess", -1)         
+        else:                           
+            yield ("guess", self._tournament[question['tournament']])    
 
 
+class Prompt(Feature):
+    """
+    Feature that computes how long the inputs and outputs of the QA system are.
+    """
+    def __init__(self,name):
+        self.name = name
+        self._prompt = dict()
+        self.idx = 0
 
+    def add_training(self, question_source):                                
+        import json                                                         
+        import gzip                                                         
+        if 'json.gz' in question_source:                                    
+            with gzip.open(question_source) as infile:                      
+                questions = json.load(infile)                               
+        else:                                                               
+            with open(question_source) as infile:                           
+                questions = json.load(infile)                               
+        for ii in questions:
+            if ii['answer_prompt'] not in self._prompt:
+                self.idx += 1
+                self._prompt[ii['answer_prompt']] = self.idx
+                                              
+    def __call__(self, question, run, guess, guess_history, other_guesses=None):
 
+        if guess is None or guess=="":  
+            yield ("guess", -1)         
+        else:                           
+            yield ("guess", self._prompt[question['answer_prompt']])  
+
+class GamePlay(Feature):
+    """
+    Feature that computes how long the inputs and outputs of the QA system are.
+    """
+
+    def __call__(self, question, run, guess, guess_history, other_guesses=None):
+
+        if guess is None or guess=="":  
+            yield ("guess", -1)         
+        else:  
+            if question['gameplay'] == True:                         
+                yield ("guess", 1)  
+            else:
+                yield ("guess", 0) 
 if __name__ == "__main__":
     """
 

@@ -35,7 +35,7 @@ def runs(text, run_length):
         if current_run > last_run and current_run < idx + run_length:
             yield text[:current_run]
             last_run = current_run
-    print(text)
+    # print(text)
     yield text
 
 def sentence_runs(sentences, run_length):

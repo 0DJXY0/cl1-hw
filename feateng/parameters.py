@@ -40,7 +40,7 @@ def add_buzzer_params(parser):
     parser.add_argument('--buzzer_guessers', nargs='+', default = ['Tfidf'], help='Guessers to feed into Buzzer', type=str)
     parser.add_argument('--buzzer_history_length', type=int, default=0, help="How many time steps to retain guesser history")
     parser.add_argument('--buzzer_history_depth', type=int, default=0, help="How many old guesses per time step to keep")    
-    parser.add_argument('--features', nargs='+', help='Features to feed into Buzzer', type=str,  default=[])  
+    parser.add_argument('--features', nargs='+', help='Features to feed into Buzzer', type=str,  default=['Diff','Length'])  
     parser.add_argument('--buzzer_type', type=str, default="logistic")
     parser.add_argument('--run_length', type=int, default=100)
     parser.add_argument('--primary_guesser', type=str, default='Tfidf', help="What guesser does buzzer depend on?")
@@ -216,11 +216,12 @@ def load_buzzer(flags, guesser_params, load=False):
             feature = LengthFeature(ff)
             buzzer.add_feature(feature)
             features_added.add(ff)
-        if ff == "Frequency":
+        if ff == "Freq":
             from features import FrequencyFeature
             feature = FrequencyFeature(ff)
             feature.add_training("../data/qanta.buzztrain.json.gz")
             buzzer.add_feature(feature)
+            features_added.add(ff)
         if ff == "LengthRun":
             from features import LengthRun
             feature = LengthRun(ff)
@@ -239,8 +240,38 @@ def load_buzzer(flags, guesser_params, load=False):
         if ff == "Category":
             from features import QuestionCategory
             feature = QuestionCategory(ff)
+            feature.add_training("../data/qanta.buzztrain.json.gz")
             buzzer.add_feature(feature)
-            features_added.add(ff)                
+            features_added.add(ff)               
+        if ff == "Year":
+            from features import Year
+            feature = Year(ff)
+            buzzer.add_feature(feature)
+            features_added.add(ff)    
+        if ff == "Diff":
+            from features import Difficulty
+            feature = Difficulty(ff)
+            feature.add_training("../data/qanta.buzztrain.json.gz")
+            buzzer.add_feature(feature)
+            features_added.add(ff)           
+        if ff == "Tourna":
+            from features import Tournament
+            feature = Tournament(ff)
+            feature.add_training("../data/qanta.buzztrain.json.gz")
+            buzzer.add_feature(feature)
+            features_added.add(ff)     
+        if ff == "Prompt":
+            from features import Prompt
+            feature = Prompt(ff)
+            feature.add_training("../data/qanta.buzztrain.json.gz")
+            buzzer.add_feature(feature)
+            features_added.add(ff)  
+        if ff == "GP":
+            from features import GamePlay
+            feature = GamePlay(ff)
+            buzzer.add_feature(feature)
+            features_added.add(ff)   
+
 
     if len(flags.features) != len(features_added):
         error_message = "%i features on command line (%s), but only added %i (%s).  "
