@@ -209,6 +209,8 @@ def load_buzzer(flags, guesser_params, load=False):
     ######################################################################    
 
     features_added = set()
+    train_path = "../data/qanta.buzztrain.json.gz"
+    train_path = "./data/qanta.buzztrain.json.gz"
 
     for ff in flags.features:
         if ff == "Length":
@@ -219,7 +221,7 @@ def load_buzzer(flags, guesser_params, load=False):
         if ff == "Freq":
             from features import FrequencyFeature
             feature = FrequencyFeature(ff)
-            feature.add_training("../data/qanta.buzztrain.json.gz")
+            feature.add_training(train_path)
             buzzer.add_feature(feature)
             features_added.add(ff)
         if ff == "LengthRun":
@@ -240,7 +242,7 @@ def load_buzzer(flags, guesser_params, load=False):
         if ff == "Category":
             from features import QuestionCategory
             feature = QuestionCategory(ff)
-            feature.add_training("../data/qanta.buzztrain.json.gz")
+            feature.add_training(train_path)
             buzzer.add_feature(feature)
             features_added.add(ff)               
         if ff == "Year":
@@ -251,19 +253,19 @@ def load_buzzer(flags, guesser_params, load=False):
         if ff == "Diff":
             from features import Difficulty
             feature = Difficulty(ff)
-            feature.add_training("../data/qanta.buzztrain.json.gz")
+            # feature.add_training("../data/qanta.buzztrain.json.gz")
             buzzer.add_feature(feature)
             features_added.add(ff)           
         if ff == "Tourna":
             from features import Tournament
             feature = Tournament(ff)
-            feature.add_training("../data/qanta.buzztrain.json.gz")
+            feature.add_training(train_path)
             buzzer.add_feature(feature)
             features_added.add(ff)     
         if ff == "Prompt":
             from features import Prompt
             feature = Prompt(ff)
-            feature.add_training("../data/qanta.buzztrain.json.gz")
+            feature.add_training(train_path)
             buzzer.add_feature(feature)
             features_added.add(ff)  
         if ff == "GP":

@@ -221,31 +221,37 @@ class Difficulty(Feature):
     """
     Feature that computes how long the inputs and outputs of the QA system are.
     """
-    def __init__(self,name):
-        self.name = name
-        self._difficulty = dict()
-        self.idx = 0
+    # def __init__(self,name):
+    #     self.name = name
+    #     self._difficulty = dict()
+    #     self.idx = 0
 
-    def add_training(self, question_source):                                
-        import json                                                         
-        import gzip                                                         
-        if 'json.gz' in question_source:                                    
-            with gzip.open(question_source) as infile:                      
-                questions = json.load(infile)                               
-        else:                                                               
-            with open(question_source) as infile:                           
-                questions = json.load(infile)                               
-        for ii in questions:
-            if ii['difficulty'] not in self._difficulty:
-                self.idx += 1
-                self._difficulty[ii['difficulty']] = self.idx
+    # def add_training(self, question_source):                                
+    #     import json                                                         
+    #     import gzip                                                         
+    #     if 'json.gz' in question_source:                                    
+    #         with gzip.open(question_source) as infile:                      
+    #             questions = json.load(infile)                               
+    #     else:                                                               
+    #         with open(question_source) as infile:                           
+    #             questions = json.load(infile)                               
+    #     for ii in questions:
+    #         if ii['difficulty'] not in self._difficulty:
+    #             self.idx += 1
+    #             self._difficulty[ii['difficulty']] = self.idx
                                               
+    # def __call__(self, question, run, guess, guess_history, other_guesses=None):
+
+    #     if guess is None or guess=="":  
+    #         yield ("guess", -1)         
+    #     else:                           
+    #         yield ("guess", self._difficulty[question['difficulty']])        
     def __call__(self, question, run, guess, guess_history, other_guesses=None):
 
         if guess is None or guess=="":  
             yield ("guess", -1)         
         else:                           
-            yield ("guess", self._difficulty[question['difficulty']])        
+            yield ("guess", question['difficulty'])   
 
 class Tournament(Feature):
     """
