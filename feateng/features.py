@@ -203,7 +203,13 @@ class QuestionCategory(Feature):
         if guess is None or guess=="":  
             yield ("guess", -1)         
         else:                           
-            yield ("guess", self._category[question['category']])    
+            if  question['category'] in self._category:
+                yield ("guess", self._category[question['category']])        
+            else:
+                self.idx += 1
+                self._category[question['category']] = self.idx
+                yield ('guess', self.idx)
+   
 
 class Year(Feature):
     """
@@ -215,7 +221,7 @@ class Year(Feature):
         if guess is None or guess=="":  
             yield ("guess", -1)         
         else:                           
-            yield ("guess", int(question['year'])/2024)          
+            yield ("guess", int(question['year']))          
 
 class Difficulty(Feature):
     """
@@ -244,8 +250,13 @@ class Difficulty(Feature):
 
     #     if guess is None or guess=="":  
     #         yield ("guess", -1)         
-    #     else:                           
-    #         yield ("guess", self._difficulty[question['difficulty']])        
+    #     else:                          
+    #         if  question['difficulty'] in self._difficulty:
+    #             yield ("guess", self._difficulty[question['difficulty']])        
+    #         else:
+    #             self.idx += 1
+    #             self._difficulty[question['difficulty']] = self.idx
+    #             yield ('guess', self.idx)
     def __call__(self, question, run, guess, guess_history, other_guesses=None):
 
         if guess is None or guess=="":  
