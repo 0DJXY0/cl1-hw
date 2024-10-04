@@ -40,7 +40,7 @@ def add_buzzer_params(parser):
     parser.add_argument('--buzzer_guessers', nargs='+', default = ['Tfidf'], help='Guessers to feed into Buzzer', type=str)
     parser.add_argument('--buzzer_history_length', type=int, default=0, help="How many time steps to retain guesser history")
     parser.add_argument('--buzzer_history_depth', type=int, default=0, help="How many old guesses per time step to keep")    
-    parser.add_argument('--features', nargs='+', help='Features to feed into Buzzer', type=str,  default=['Diff','UsefulInfo','Length','Category'])  
+    parser.add_argument('--features', nargs='+', help='Features to feed into Buzzer', type=str,  default=['UsefulInfo','Length','GenderInfo','LengthRun'])  
     parser.add_argument('--buzzer_type', type=str, default="logistic")
     parser.add_argument('--run_length', type=int, default=100)
     parser.add_argument('--primary_guesser', type=str, default='Tfidf', help="What guesser does buzzer depend on?")
