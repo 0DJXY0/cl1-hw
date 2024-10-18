@@ -116,7 +116,11 @@ class QuestionDataset(Dataset):
         #### You should consider the out of vocab(OOV) cases
         #### question_text is already tokenized    
         ####Your code here
-
+        for i, word in enumerate(ex):
+            if word in word2ind:
+                vec_text[i] = word2ind[word]
+            else:
+                vec_text[i] = word2ind.get('<UNK>', 1)
 
 
         return vec_text
@@ -166,7 +170,7 @@ def evaluate(data_loader, model, device):
         labels = batch['labels']
 
         ####Your code here
-
+        logits = model(question_text, question_len)
         top_n, top_i = logits.topk(1)
         num_examples += question_text.size(0)
         error += torch.nonzero(top_i.squeeze() - torch.LongTensor(labels)).size(0)
@@ -202,7 +206,11 @@ def train(args, model, train_data_loader, dev_data_loader, accuracy, device):
         labels = batch['labels']
 
         #### Your code here
-        
+        optimizer.zero_grad()
+        pred = model(question_text, question_len)
+        loss = criterion(pred, labels)
+        loss.backward()
+        optimizer.step()
 
         clip_grad_norm_(model.parameters(), args.grad_clipping) 
         print_loss_total += loss.data.numpy()
@@ -241,6 +249,8 @@ class DanModel(nn.Module):
         self.nn_dropout = nn_dropout
         self.embeddings = nn.Embedding(self.vocab_size, self.emb_dim, padding_idx=0)
         self.linear1 = nn.Linear(emb_dim, n_hidden_units)
+        self.relu = nn.ReLU()
+        self.dropout = nn.Dropout(p=self.nn_dropout)
         self.linear2 = nn.Linear(n_hidden_units, n_classes)
 
         # Create the actual prediction framework for the DAN classifier.
@@ -253,7 +263,12 @@ class DanModel(nn.Module):
         # For test cases, the network we consider is - linear1 -> ReLU() -> Dropout(0.5) -> linear2
 
         #### Your code here
-        
+        self.classifier = nn.Sequential(
+            self.linear1,
+            self.relu,
+            self.dropout,
+            self.linear2
+        )        
         
        
     def forward(self, input_text, text_len, is_prob=False):
@@ -269,11 +284,12 @@ class DanModel(nn.Module):
         logits = torch.LongTensor([0.0] * self.n_classes)
 
         # Complete the forward funtion.  First look up the word embeddings.
-        
+        embeddings = self.embeddings(input_text)
         # Then average them 
-        
+        embeddings = torch.mean(embeddings,dim=1)
         # Before feeding them through the network
         
+        logits = self.classifier(embeddings)
 
         if is_prob:
             logits = self._softmax(logits)
