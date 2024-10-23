@@ -243,8 +243,14 @@ class DanModel(nn.Module):
         # second linear layer makes the final prediction.  Other
         # layers / functions to consider are Dropout, ReLU.
         # For test cases, the network we consider is - linear1 -> ReLU() -> Dropout(0.5) -> linear2
-
-        self.network = None
+        self.relu = nn.ReLU()
+        self.dropout = nn.Dropout(p=self.nn_dropout)
+        self.network = nn.Sequential(
+            self.linear1,
+            self.relu,
+            self.dropout,
+            self.linear2
+        )   
         #### Your code here
 
         # To make this work on CUDA, you need to move it to the appropriate
@@ -281,6 +287,8 @@ class DanModel(nn.Module):
         """
         average = torch.zeros(text_embeddings.size()[0], text_embeddings.size()[-1])
         #### Your code here
+        sum_embeddings = torch.sum(text_embeddings, dim=1)
+        average = sum_embeddings / text_len.unsqueeze(1).float()
 
         # You'll want to finish this function.  You don't *have* to use it in
         # your forward function, but it's a good way to make sure the
@@ -303,6 +311,9 @@ class DanModel(nn.Module):
         # Complete the forward funtion.  First look up the word embeddings.
           # Then average them
           # Before feeding them through the network
+        embeddings = self.embeddings(input_text)
+        embeddings = self.average(embeddings)
+        representation = self.network(embeddings)
 
         return representation
 
@@ -759,14 +770,18 @@ class DanGuesser(Guesser):
         criterion = self.dan_model.criterion
 
         # Prepare the optimizer to ignore gradients and compute predictions
-
-
+        optimizer.zero_grad()
         # Compute the loss
-        if type(criterion).__name__ == "MarginRankingLoss":
+        if type(criterion).__name__ == "MarginRankingLoss":          
               loss = None
         elif type(criterion).__name__ == "CrossEntropyLoss":
-              loss = None
               
+              pred = model.forward(example, example_length)
+              loss = nn.CrossEntropyLoss(pred,answers)
+        loss.backward()
+        if grad_clip > 0:
+            torch.nn.utils.clip_grad_norm_(model.parameters(), grad_clip)
+        optimizer.step()
         return loss
 
 
