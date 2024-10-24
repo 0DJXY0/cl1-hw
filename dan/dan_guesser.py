@@ -312,7 +312,7 @@ class DanModel(nn.Module):
           # Then average them
           # Before feeding them through the network
         embeddings = self.embeddings(input_text)
-        embeddings = self.average(embeddings)
+        embeddings = self.average(embeddings, text_len)
         representation = self.network(embeddings)
 
         return representation
@@ -609,6 +609,8 @@ class DanGuesser(Guesser):
                     
         #### modify the batch_step to complete the update
         for idx, batch in enumerate(train_data_loader):                
+            # print('batch:', batch)
+            # print('indices: ',self.training_data.answer_indices.index('London'))
             anchor_text = batch['question_text'].to(self.params.dan_guesser_device)
             anchor_length = batch['question_len'].to(self.params.dan_guesser_device)
 
@@ -771,13 +773,23 @@ class DanGuesser(Guesser):
 
         # Prepare the optimizer to ignore gradients and compute predictions
         optimizer.zero_grad()
+        preds = model.forward(example, example_length)
         # Compute the loss
         if type(criterion).__name__ == "MarginRankingLoss":          
-              loss = None
+              pos = model.forward(positive, positive_length)
+              neg = model.forward(negative, negative_length)
+              d = nn.CosineSimilarity(dim=1)
+              x1 = d(preds,pos)
+              x2 = d(preds,neg)
+              y = torch.ones(x1.shape)
+              loss = criterion(x1, x2, y)
         elif type(criterion).__name__ == "CrossEntropyLoss":
-              
-              pred = model.forward(example, example_length)
-              loss = nn.CrossEntropyLoss(pred,answers)
+              indices = [answer_lookup.index(ans) for ans in answers]
+              labels = torch.tensor(indices,dtype=torch.long, device=preds.device)
+            #   print('target: ', targets)
+            #   print('pred:',preds)
+ 
+              loss = criterion(preds,labels)
         loss.backward()
         if grad_clip > 0:
             torch.nn.utils.clip_grad_norm_(model.parameters(), grad_clip)
@@ -853,11 +865,24 @@ def number_errors(question_text: torch.Tensor, question_len: torch.Tensor,
     # Call the model to get the representation
     # You'll need to update the code here
     #### Your code here
+    preds = model.forward(question_text,question_len)
+
     error = -1
     if type(model.criterion).__name__ == "MarginRankingLoss":
-        None
+        error = 0
+        preds = preds.detach().cpu().numpy()
+        preds = train_data.get_batch_nearest(preds, n_nearest=1, lookup_answer=True)
+        # print('preds:',preds)
+        # print(labels)
+        for i in range(len(labels)):
+            if preds[i] != labels[i]:
+                error += 1
+        
     elif type(model.criterion).__name__ == "CrossEntropyLoss":
-        error = len(labels)        
+        _, preds = torch.max(preds, dim=1)
+        labels = [train_data.answer_indices.index(ans) for ans in labels]
+        labels = torch.tensor(labels,dtype=torch.long, device=preds.device)
+        error = (preds != labels).sum().item()
 
     return error
     

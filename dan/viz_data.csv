@@ -1,0 +1,161 @@
+,label,dim_0,dim_1,layer,fold,text,iteration
+0,Rouble,-4.264589309692383,-3.80905818939209,average,train,What is this currency of russia,0
+1,Rouble,0.588520348072052,0.38639727234840393,output,train,What is this currency of russia,0
+2,Pound,-4.251096248626709,-3.593045711517334,average,train,What is this currency of england,0
+3,Pound,0.5876203775405884,0.38120052218437195,output,train,What is this currency of england,0
+4,Moscow,-1.566037654876709,-0.4231985807418823,average,train,What is this capital of russia,0
+5,Moscow,0.5292962193489075,0.044420622289180756,output,train,What is this capital of russia,0
+6,London,-1.5525445938110352,-0.20718634128570557,average,train,What is this capital of england,0
+7,London,0.5283961892127991,0.03922386094927788,output,train,What is this capital of england,0
+8,Rouble,-0.992717444896698,-5.016910552978516,average,train,What 's russia 's currency,0
+9,Rouble,0.5328292846679688,0.06482184678316116,output,train,What 's russia 's currency,0
+10,Pound,-0.9792245030403137,-4.800898551940918,average,train,What 's england 's currency,0
+11,Pound,0.5319293141365051,0.059625107795000076,output,train,What 's england 's currency,0
+12,Moscow,1.705834150314331,-1.6310513019561768,average,train,What 's russia 's capital,0
+13,Moscow,-0.1187407374382019,-0.2641942799091339,output,train,What 's russia 's capital,0
+14,London,1.7193272113800049,-1.4150391817092896,average,train,What 's england 's capital,0
+15,London,-0.187818706035614,-0.2928660213947296,output,train,What 's england 's capital,0
+16,Rouble,-2.592578887939453,-3.0913493633270264,average,dev,What currency is used in russia,0
+17,Rouble,0.5560116171836853,0.19868288934230804,output,dev,What currency is used in russia,0
+18,Pound,-2.5790860652923584,-2.8753371238708496,average,dev,What currency is used in england,0
+19,Pound,0.5551116466522217,0.19348616898059845,output,dev,What currency is used in england,0
+20,Moscow,-0.789821207523346,0.38937151432037354,average,dev,What is the capital and largest city of russia,0
+21,Moscow,0.4761061668395996,-0.017295047640800476,output,dev,What is the capital and largest city of russia,0
+22,London,-0.7763282656669617,0.6053836345672607,average,dev,What is the capital and largest city of england,0
+23,London,0.4070282280445099,-0.045966774225234985,output,dev,What is the capital and largest city of england,0
+24,Rouble,-1.5599229335784912,-3.8739261627197266,average,dev,What 's the currency in russia,0
+25,Rouble,0.5396520495414734,0.10421807318925858,output,dev,What 's the currency in russia,0
+26,Pound,-1.546429991722107,-3.6579136848449707,average,dev,What 's the currency in england,0
+27,Pound,0.538752019405365,0.09902133047580719,output,dev,What 's the currency in england,0
+28,Moscow,0.24283474683761597,-0.39320504665374756,average,dev,What 's the capital of russia,0
+29,Moscow,0.21446090936660767,-0.1258944422006607,output,dev,What 's the capital of russia,0
+30,London,0.25632768869400024,-0.1771930456161499,average,dev,What 's the capital of england,0
+31,London,0.1453830599784851,-0.15456613898277283,output,dev,What 's the capital of england,0
+32,Rouble,-4.257036209106445,-3.8039560317993164,average,train,What is this currency of russia,10
+33,Rouble,0.6764166355133057,0.4326505959033966,output,train,What is this currency of russia,10
+34,Pound,-4.245434284210205,-3.5892319679260254,average,train,What is this currency of england,10
+35,Pound,0.6755548715591431,0.42767444252967834,output,train,What is this currency of england,10
+36,Moscow,-1.568257451057434,-0.4245116710662842,average,train,What is this capital of russia,10
+37,Moscow,0.6173892617225647,0.09181001782417297,output,train,What is this capital of russia,10
+38,London,-1.5566555261611938,-0.20978736877441406,average,train,What is this capital of england,10
+39,London,0.6165274977684021,0.0868339017033577,output,train,What is this capital of england,10
+40,Rouble,-1.0738788843154907,-5.070322036743164,average,train,What 's russia 's currency,10
+41,Rouble,0.6225124597549438,0.12139290571212769,output,train,What 's russia 's currency,10
+42,Pound,-1.0622769594192505,-4.855598449707031,average,train,What 's england 's currency,10
+43,Pound,0.6216506958007812,0.1164168268442154,output,train,What 's england 's currency,10
+44,Moscow,1.614899754524231,-1.6908776760101318,average,train,What 's russia 's capital,10
+45,Moscow,0.21345332264900208,-0.09111753106117249,output,train,What 's russia 's capital,10
+46,London,1.6265016794204712,-1.4761534929275513,average,train,What 's england 's capital,10
+47,London,0.14615342020988464,-0.11487452685832977,output,train,What 's england 's capital,10
+48,Rouble,-2.5992040634155273,-3.0956342220306396,average,dev,What currency is used in russia,10
+49,Rouble,0.6441935896873474,0.24658578634262085,output,dev,What currency is used in russia,10
+50,Pound,-2.587602138519287,-2.8809099197387695,average,dev,What currency is used in england,10
+51,Pound,0.6433318257331848,0.24160970747470856,output,dev,What currency is used in england,10
+52,Moscow,-0.7991301417350769,0.3833649158477783,average,dev,What is the capital and largest city of russia,10
+53,Moscow,0.5743662714958191,0.03628545254468918,output,dev,What is the capital and largest city of russia,10
+54,London,-0.7875282168388367,0.5980890989303589,average,dev,What is the capital and largest city of england,10
+55,London,0.5070663690567017,0.012528456747531891,output,dev,What is the capital and largest city of england,10
+56,Rouble,-1.607360601425171,-3.905120849609375,average,dev,What 's the currency in russia,10
+57,Rouble,0.6286560297012329,0.15686742961406708,output,dev,What 's the currency in russia,10
+58,Pound,-1.5957586765289307,-3.690396785736084,average,dev,What 's the currency in england,10
+59,Pound,0.6277942657470703,0.1518913358449936,output,dev,What 's the currency in england,10
+60,Moscow,0.19271314144134521,-0.42612171173095703,average,dev,What 's the capital of russia,10
+61,Moscow,0.4136050343513489,-0.020463574677705765,output,dev,What 's the capital of russia,10
+62,London,0.20431506633758545,-0.21139764785766602,average,dev,What 's the capital of england,10
+63,London,0.34630516171455383,-0.044220563024282455,output,dev,What 's the capital of england,10
+64,Rouble,-4.254207134246826,-3.8018546104431152,average,train,What is this currency of russia,20
+65,Rouble,0.687015950679779,0.4562514126300812,output,train,What is this currency of russia,20
+66,Pound,-4.242969036102295,-3.587404727935791,average,train,What is this currency of england,20
+67,Pound,0.6861616373062134,0.45131823420524597,output,train,What is this currency of england,20
+68,Moscow,-1.5669467449188232,-0.4235333204269409,average,train,What is this capital of russia,20
+69,Moscow,0.6280195116996765,0.11558954417705536,output,train,What is this capital of russia,20
+70,London,-1.555708408355713,-0.2090834379196167,average,train,What is this capital of england,20
+71,London,0.6271651983261108,0.11065633594989777,output,train,What is this capital of england,20
+72,Rouble,-1.0886127948760986,-5.081229209899902,average,train,What 's russia 's currency,20
+73,Rouble,0.6334698796272278,0.147061288356781,output,train,What 's russia 's currency,20
+74,Pound,-1.0773744583129883,-4.866779327392578,average,train,What 's england 's currency,20
+75,Pound,0.6326155066490173,0.1421280801296234,output,train,What 's england 's currency,20
+76,Moscow,1.5986478328704834,-1.7029081583023071,average,train,What 's russia 's capital,20
+77,Moscow,0.26333534717559814,-0.04096756875514984,output,train,What 's russia 's capital,20
+78,London,1.6098861694335938,-1.488458275794983,average,train,What 's england 's capital,20
+79,London,0.19583827257156372,-0.06245727092027664,output,train,What 's england 's capital,20
+80,Rouble,-2.5996580123901367,-3.095965623855591,average,dev,What currency is used in russia,20
+81,Rouble,0.6548598408699036,0.27057313919067383,output,dev,What currency is used in russia,20
+82,Pound,-2.5884194374084473,-2.8815157413482666,average,dev,What currency is used in england,20
+83,Pound,0.6540055274963379,0.26563990116119385,output,dev,What currency is used in england,20
+84,Moscow,-0.7994608283042908,0.3831268548965454,average,dev,What is the capital and largest city of russia,20
+85,Moscow,0.5835304260253906,0.060976073145866394,output,dev,What is the capital and largest city of russia,20
+86,London,-0.7882223725318909,0.5975767374038696,average,dev,What is the capital and largest city of england,20
+87,London,0.5160332918167114,0.0394863486289978,output,dev,What is the capital and largest city of england,20
+88,Rouble,-1.6157753467559814,-3.911348342895508,average,dev,What 's the currency in russia,20
+89,Rouble,0.6394845843315125,0.18179193139076233,output,dev,What 's the currency in russia,20
+90,Pound,-1.604536771774292,-3.6968984603881836,average,dev,What 's the currency in england,20
+91,Pound,0.638630211353302,0.17685869336128235,output,dev,What 's the currency in england,20
+92,Moscow,0.18442171812057495,-0.4322561025619507,average,dev,What 's the capital of russia,20
+93,Moscow,0.4402528405189514,0.015359394252300262,output,dev,What 's the capital of russia,20
+94,London,0.19566017389297485,-0.21780622005462646,average,dev,What 's the capital of england,20
+95,London,0.3727557063102722,-0.006130337715148926,output,dev,What 's the capital of england,20
+96,Rouble,-4.252683162689209,-3.800693988800049,average,train,What is this currency of russia,30
+97,Rouble,0.691133439540863,0.47388869524002075,output,train,What is this currency of russia,30
+98,Pound,-4.24179744720459,-3.5865116119384766,average,train,What is this currency of england,30
+99,Pound,0.6902863383293152,0.4689970910549164,output,train,What is this currency of england,30
+100,Moscow,-1.566204309463501,-0.42296814918518066,average,train,What is this capital of russia,30
+101,Moscow,0.6321530342102051,0.13331913948059082,output,train,What is this capital of russia,30
+102,London,-1.5553185939788818,-0.2087857723236084,average,train,What is this capital of england,30
+103,London,0.6313058733940125,0.12842755019664764,output,train,What is this capital of england,30
+104,Rouble,-1.0960969924926758,-5.0869317054748535,average,train,What 's russia 's currency,30
+105,Rouble,0.6377716064453125,0.16576240956783295,output,train,What 's russia 's currency,30
+106,Pound,-1.0852112770080566,-4.872749328613281,average,train,What 's england 's currency,30
+107,Pound,0.6369244456291199,0.16087082028388977,output,train,What 's england 's currency,30
+108,Moscow,1.5903818607330322,-1.7092057466506958,average,train,What 's russia 's capital,30
+109,Moscow,0.28688502311706543,-0.007968030869960785,output,train,What 's russia 's capital,30
+110,London,1.6012675762176514,-1.495023250579834,average,train,What 's england 's capital,30
+111,London,0.21924659609794617,-0.02769993245601654,output,train,What 's england 's capital,30
+112,Rouble,-2.5998141765594482,-3.0960850715637207,average,dev,What currency is used in russia,30
+113,Rouble,0.659011721611023,0.2884088158607483,output,dev,What currency is used in russia,30
+114,Pound,-2.588928461074829,-2.8819024562835693,average,dev,What currency is used in england,30
+115,Pound,0.6581645607948303,0.2835172116756439,output,dev,What currency is used in england,30
+116,Moscow,-0.7995586395263672,0.38305187225341797,average,dev,What is the capital and largest city of russia,30
+117,Moscow,0.5868263840675354,0.07953277230262756,output,dev,What is the capital and largest city of russia,30
+118,London,-0.7886730432510376,0.5972343683242798,average,dev,What is the capital and largest city of england,30
+119,London,0.5191880464553833,0.05980087071657181,output,dev,What is the capital and largest city of england,30
+120,Rouble,-1.6200155019760132,-3.914579391479492,average,dev,What 's the currency in russia,30
+121,Rouble,0.6437199711799622,0.20010992884635925,output,dev,What 's the currency in russia,30
+122,Pound,-1.6091299057006836,-3.7003965377807617,average,dev,What 's the currency in england,30
+123,Pound,0.6428728103637695,0.19521833956241608,output,dev,What 's the currency in england,30
+124,Moscow,0.18023991584777832,-0.4354422092437744,average,dev,What 's the capital of russia,30
+125,Moscow,0.4522285461425781,0.040267035365104675,output,dev,What 's the capital of russia,30
+126,London,0.19112563133239746,-0.22125983238220215,average,dev,What 's the capital of england,30
+127,London,0.38459014892578125,0.02053513377904892,output,dev,What 's the capital of england,30
+128,Rouble,-4.25183629989624,-3.800039768218994,average,train,What is this currency of russia,40
+129,Rouble,0.6923617720603943,0.4849678874015808,output,train,What is this currency of russia,40
+130,Pound,-4.2411017417907715,-3.5859737396240234,average,train,What is this currency of england,40
+131,Pound,0.6915177702903748,0.48009413480758667,output,train,What is this currency of england,40
+132,Moscow,-1.5657031536102295,-0.4225809574127197,average,train,What is this capital of russia,40
+133,Moscow,0.6333884000778198,0.1444391906261444,output,train,What is this capital of russia,40
+134,London,-1.5549683570861816,-0.20851492881774902,average,train,What is this capital of england,40
+135,London,0.6325443983078003,0.13956543803215027,output,train,What is this capital of england,40
+136,Rouble,-1.0996413230895996,-5.0896711349487305,average,train,What 's russia 's currency,40
+137,Rouble,0.6390898823738098,0.17736098170280457,output,train,What 's russia 's currency,40
+138,Pound,-1.0889065265655518,-4.875605583190918,average,train,What 's england 's currency,40
+139,Pound,0.6382458209991455,0.17248724400997162,output,train,What 's england 's currency,40
+140,Moscow,1.5864919424057007,-1.712212324142456,average,train,What 's russia 's capital,40
+141,Moscow,0.29694440960884094,0.011388778686523438,output,train,What 's russia 's capital,40
+142,London,1.5972267389297485,-1.498146414756775,average,train,What 's england 's capital,40
+143,London,0.22915807366371155,-0.007231362164020538,output,train,What 's england 's capital,40
+144,Rouble,-2.5998270511627197,-3.096095085144043,average,dev,What currency is used in russia,40
+145,Rouble,0.6602576375007629,0.29958969354629517,output,dev,What currency is used in russia,40
+146,Pound,-2.589092254638672,-2.8820295333862305,average,dev,What currency is used in england,40
+147,Pound,0.6594136357307434,0.294715940952301,output,dev,What currency is used in england,40
+148,Moscow,-0.7994872331619263,0.38310694694519043,average,dev,What is the capital and largest city of russia,40
+149,Moscow,0.5873405933380127,0.09115734696388245,output,dev,What is the capital and largest city of russia,40
+150,London,-0.7887524366378784,0.5971728563308716,average,dev,What is the capital and largest city of england,40
+151,London,0.5195541977882385,0.07253719121217728,output,dev,What is the capital and largest city of england,40
+152,Rouble,-1.62200927734375,-3.9161200523376465,average,dev,What 's the currency in russia,40
+153,Rouble,0.6450064778327942,0.2115250825881958,output,dev,What 's the currency in russia,40
+154,Pound,-1.6112744808197021,-3.702054500579834,average,dev,What 's the currency in england,40
+155,Pound,0.6441624164581299,0.20665134489536285,output,dev,What 's the currency in england,40
+156,Moscow,0.17833071947097778,-0.4369180202484131,average,dev,What 's the capital of russia,40
+157,Moscow,0.4568266272544861,0.05530663579702377,output,dev,What 's the capital of russia,40
+158,London,0.18906551599502563,-0.22285199165344238,average,dev,What 's the capital of england,40
+159,London,0.3890402317047119,0.03668647259473801,output,dev,What 's the capital of england,40
