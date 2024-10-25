@@ -872,17 +872,22 @@ def number_errors(question_text: torch.Tensor, question_len: torch.Tensor,
         error = 0
         preds = preds.detach().cpu().numpy()
         preds = train_data.get_batch_nearest(preds, n_nearest=1, lookup_answer=True)
-        # print('preds:',preds)
-        # print(labels)
+        print('preds:',preds)
+        print(labels)
         for i in range(len(labels)):
-            if preds[i] != labels[i]:
+            if preds[i].lower() != labels[i].lower():
                 error += 1
         
     elif type(model.criterion).__name__ == "CrossEntropyLoss":
         _, preds = torch.max(preds, dim=1)
-        labels = [train_data.answer_indices.index(ans) for ans in labels]
-        labels = torch.tensor(labels,dtype=torch.long, device=preds.device)
-        error = (preds != labels).sum().item()
+        labels_idx = []
+        for i in range(len(labels)):
+            try: 
+                labels_idx.append(train_data.answer_indices.index(labels[i]))
+            except ValueError:
+                labels_idx.append(-99) 
+        labels_idx = torch.tensor(labels_idx,dtype=torch.long, device=preds.device)
+        error = (preds != labels_idx).sum().item()
 
     return error
     
