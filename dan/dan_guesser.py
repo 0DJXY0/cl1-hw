@@ -101,11 +101,11 @@ class DanPlotter:
         
     def add_checkpoint(self, model, train_docs, dev_docs, iteration):
         vocab = train_docs.vocab
-        
+        device = next(model.parameters()).device
         # Plot the individual voab words
         for word_idx in range(len(vocab)):
             word = vocab.lookup_token(word_idx)
-            embedding = model.embeddings(torch.tensor(word_idx)).clone().detach()
+            embedding = model.embeddings(torch.tensor(word_idx).to(device)).clone().detach()
             
             self.parameters.append({"text": word,
                                        "dim_0": float(embedding[0]),
@@ -152,8 +152,10 @@ class DanPlotter:
                               ("dev", dev_docs)]:
             for doc_idx in range(len(doc_set)):
                 doc, pos, neg, ans = doc_set[doc_idx]
+
+                doc = doc.to(device)
                 embeddings = model.embeddings(doc)
-                average = model.average(embeddings, torch.IntTensor([len(doc)])).clone().detach()
+                average = model.average(embeddings, torch.IntTensor([len(doc)]).to(device)).clone().detach()
                 final = model.network(average).clone().detach()
                 
                 for layer, representation in [("average", average),
@@ -226,7 +228,7 @@ class DanModel(nn.Module):
                          (self.vocab_size, self.emb_dim, n_hidden_units))
         self.embeddings = nn.Embedding(self.vocab_size, self.emb_dim, padding_idx=0)
         self.linear1 = nn.Linear(emb_dim, n_hidden_units)
-
+        self.linear2 = nn.Linear(n_hidden_units, n_answers)
         if criterion_name == "MarginRankingLoss":
               self.linear2 = nn.Linear(n_hidden_units, n_hidden_units)
         elif criterion_name == "CrossEntropyLoss":
@@ -243,6 +245,8 @@ class DanModel(nn.Module):
         # second linear layer makes the final prediction.  Other
         # layers / functions to consider are Dropout, ReLU.
         # For test cases, the network we consider is - linear1 -> ReLU() -> Dropout(0.5) -> linear2
+
+        #### Your code here
         self.relu = nn.ReLU()
         self.dropout = nn.Dropout(p=self.nn_dropout)
         self.network = nn.Sequential(
@@ -251,13 +255,11 @@ class DanModel(nn.Module):
             self.dropout,
             self.linear2
         )   
-        #### Your code here
-
         # To make this work on CUDA, you need to move it to the appropriate
         # device
         if self.network:
             self.network = self.network.to(device)
-
+        self.to(device)
         self.initialize_parameters(initialization)
 
 
@@ -289,7 +291,6 @@ class DanModel(nn.Module):
         #### Your code here
         sum_embeddings = torch.sum(text_embeddings, dim=1)
         average = sum_embeddings / text_len.unsqueeze(1).float()
-
         # You'll want to finish this function.  You don't *have* to use it in
         # your forward function, but it's a good way to make sure the
         # dimensions match and to use the unit test to check your work.
@@ -395,12 +396,13 @@ class QuestionData(Dataset):
         for idx, doc in enumerate(self.questions):
             q_vec = self.vectorize(doc, self.vocab, self.tokenizer)
             # TODO(jbg): check if this should actually be 0 index
-            length = len(q_vec[0])            
-            embed = model.embeddings(q_vec)
-            average = model.average(embed, torch.IntTensor([length]))
+            length = len(q_vec[0])
+            device = next(model.parameters()).device            
+            embed = model.embeddings(q_vec.to(device))
+            average = model.average(embed, torch.IntTensor([length]).to(device))
             representation = model.network(average)
 
-            logging.debug("Setting %i to be %s (length: %i) -> %s -> %s" % (idx, doc, length, ttos(q_vec[0]), ttos(representation[0])))
+            logging.debug("Setting %i to be %s (length: %i) -> %s -> %s" % (idx, doc, length, ttos(q_vec[0]), ttos(representation[0].cpu())))
             
             self.set_representation([idx], representation)
 
@@ -597,7 +599,7 @@ class DanGuesser(Guesser):
         model.train()
 
         # You *are* allowed to change the optimizer
-        optimizer = torch.optim.SGD(self.dan_model.parameters(), self.params.dan_guesser_learning_rate)
+        optimizer = torch.optim.Adam(self.dan_model.parameters(), lr =self.params.dan_guesser_learning_rate)
 
         print_loss_total = 0
         epoch_loss_total = 0
@@ -629,8 +631,8 @@ class DanGuesser(Guesser):
             if self.plotter is not None:
                 self.plotter.accumulate_gradient(model.named_parameters())
 
-            print_loss_total += loss.data.numpy()
-            epoch_loss_total += loss.data.numpy()
+            print_loss_total += loss.data.cpu().numpy()
+            epoch_loss_total += loss.data.cpu().numpy()
 
             if idx % checkpoint_every == 0 and idx > 0:
                 print_loss_avg = print_loss_total / checkpoint_every
@@ -657,7 +659,9 @@ class DanGuesser(Guesser):
 
 
     def initialize_model(self):
-        criterion = getattr(nn, self.params.dan_guesser_criterion)()        
+        criterion = getattr(nn, self.params.dan_guesser_criterion)() 
+        if self.params.dan_guesser_criterion == 'MarginRankingLoss':    
+            criterion = getattr(nn, self.params.dan_guesser_criterion)(margin=0.5)     
         self.dan_model = DanModel(model_filename=self.params.dan_guesser_filename,
                                   device=self.params.dan_guesser_device,
                                   criterion=criterion,
@@ -778,10 +782,10 @@ class DanGuesser(Guesser):
         if type(criterion).__name__ == "MarginRankingLoss":          
               pos = model.forward(positive, positive_length)
               neg = model.forward(negative, negative_length)
-              d = nn.CosineSimilarity(dim=1)
+              d = nn.CosineSimilarity(dim=1,eps=1e-6)
               x1 = d(preds,pos)
               x2 = d(preds,neg)
-              y = torch.ones(x1.shape)
+              y = torch.ones(x1.size()).to(x1.device)
               loss = criterion(x1, x2, y)
         elif type(criterion).__name__ == "CrossEntropyLoss":
               indices = [answer_lookup.index(ans) for ans in answers]
@@ -792,7 +796,7 @@ class DanGuesser(Guesser):
               loss = criterion(preds,labels)
         loss.backward()
         if grad_clip > 0:
-            torch.nn.utils.clip_grad_norm_(model.parameters(), grad_clip)
+            clip_grad_value_(model.parameters(), grad_clip)
         optimizer.step()
         return loss
 
@@ -872,8 +876,8 @@ def number_errors(question_text: torch.Tensor, question_len: torch.Tensor,
         error = 0
         preds = preds.detach().cpu().numpy()
         preds = train_data.get_batch_nearest(preds, n_nearest=1, lookup_answer=True)
-        print('preds:',preds)
-        print(labels)
+        # print('preds:',preds)
+        # print(labels)
         for i in range(len(labels)):
             if preds[i].lower() != labels[i].lower():
                 error += 1
@@ -923,7 +927,8 @@ def evaluate(data_loader: DataLoader, model: DanModel, train_data: QuestionData,
 
 if __name__ == "__main__":
     from parameters import load_questions, add_guesser_params, add_general_params, add_question_params, setup_logging, instantiate_guesser
-
+    print(torch.cuda.is_available())
+    torch.cuda.empty_cache()
     logging.basicConfig(filename='example.log', encoding='utf-8', level=logging.DEBUG)
 
     parser = argparse.ArgumentParser(description='Question Type')
