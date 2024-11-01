@@ -229,6 +229,15 @@ def transition_sequence(sentence: DependencyGraph) -> Iterable[Transition]:
     :return: A list of transition objects that creates the dependency parse
     tree.
     """
+    words=[node.get("word", "") for _, node in sorted(sentence.nodes.items())],
+    pos=[node.get("tag", "") for _, node in sorted(sentence.nodes.items())]
+
+    print(words)
+    print(pos)
+    words[0] = kROOT
+    sr = ShiftReduceState(words,pos)
+    sr.pretty_print()
+    raise
 
  
     
@@ -318,10 +327,10 @@ if __name__ == "__main__":
     sent = nltk.parse.dependencygraph.DependencyGraph(kCORRECT)
     words = [x.split('\t')[0] for x in kCORRECT.split('\n')]
     words = [kROOT] + words
-
+    print(sent)
     for ii in transition_sequence(sent):
         print(ii.pretty_print(sent))
-
+    
     train_data = list(split_data(transition_sequence))
     test_data = list(split_data(transition_sequence, generate_test=True))
 
