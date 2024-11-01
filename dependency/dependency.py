@@ -141,6 +141,8 @@ class ShiftReduceState:
         index = -1
         assert len(self.buffer) > 0, "Buffer is empty for shift"
         # Implement this
+        self.stack.append(self.buffer[index])
+        self.buffer.pop(index)
 
         return Transition('s', None)
 
@@ -155,7 +157,10 @@ class ShiftReduceState:
         assert len(self.stack) > 0, "Stack is empty for left arc"
 
         # Implement this
-
+        assert self.stack[-1] > 0, "The top of the stack is 0"
+        buffer_top = self.buffer[-1]
+        stack_top = self.stack[-1]
+        self.stack.pop(-1)
 
         return Transition('l', (buffer_top, stack_top))
 
@@ -170,7 +175,9 @@ class ShiftReduceState:
         assert len(self.stack) > 0, "Stack is empty for right arc"
 
         # Implement this
-
+        stack_top = self.stack[-1]
+        buffer_top = self.buffer[-1]
+        self.buffer.append(self.stack.pop(-1))
         return Transition('r', (stack_top, buffer_top))
     
     def feature_extractor(self, index: int) -> Iterable[Tuple[str, float]]:
