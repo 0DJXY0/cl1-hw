@@ -14,7 +14,8 @@ from nltk.classify.api import ClassifierI
 from nltk.parse.dependencygraph import DependencyGraph
 
 from nltk.corpus import dependency_treebank
-
+nltk.download('dependency_treebank')
+nltk.download('universal_tagset')
 kROOT = 'ROOT'
 VALID_TYPES = set(['s', 'l', 'r'])
 
@@ -160,8 +161,9 @@ class ShiftReduceState:
         assert self.stack[-1] > 0, "The top of the stack is 0"
         buffer_top = self.buffer[-1]
         stack_top = self.stack[-1]
+        self.edges.append((buffer_top, stack_top))
         self.stack.pop(-1)
-
+        
         return Transition('l', (buffer_top, stack_top))
 
     def right_arc(self) -> Transition:
@@ -176,6 +178,7 @@ class ShiftReduceState:
 
 <<<<<<< HEAD
         # Implement this
+<<<<<<< HEAD
         stack_top = self.stack[-1]
         buffer_top = self.buffer[-1]
         self.buffer.append(self.stack.pop(-1))
@@ -188,6 +191,12 @@ class ShiftReduceState:
         # word, depth in tree, etc.
 
 >>>>>>> upstream/master
+=======
+        stack_top = self.stack.pop(-1)
+        buffer_top = self.buffer.pop(-1)
+        self.edges.append((stack_top, buffer_top))
+        self.buffer.append(stack_top)
+>>>>>>> 07f5a58fe279d8e31fca60e0b65a4cb025ff7387
         return Transition('r', (stack_top, buffer_top))
     
     def feature_extractor(self, index: int) -> Iterable[Tuple[str, float]]:
@@ -200,13 +209,54 @@ class ShiftReduceState:
 
         :return: Yield tuples of feature -> value
         """
-
+        
         yield ("Buffer size", len(self.buffer))
         yield ("Stack size", len(self.stack))
+        yield ("Part of the speech", index)
     
+<<<<<<< HEAD
         # Implement this.  
 
 
+=======
+        # Implement this
+        if len(self.stack) > 0:
+            stop = self.stack[-1]
+            stop_word = self.words[stop]
+            stop_pos = self.pos[stop]
+            yield("Top of the stack",stop_word)
+            yield("Top of the stack pos",stop_pos)
+        else:
+            yield ("Top of the stack", "None")
+            yield ("Top of the stack pos", "None")
+        
+        if len(self.buffer) >= 2:
+            b1 = self.buffer[-1]
+            b2 = self.buffer[-2]
+            b1_word = self.words[b1]
+            b1_pos = self.pos[b1]
+            b2_word = self.words[b2]
+            b2_pos = self.pos[b2]
+            yield("Top of the buffer",b1_word)
+            yield("Top of the buffer pos",b1_pos)
+            yield("Top two of the buffer",b1_word + ' ' + b2_word)
+            yield("Top two of the buffer pos",b1_pos + ' ' + b2_pos)
+        else:
+            yield("Top of the buffer","None")
+            yield("Top of the buffer pos","None")
+            yield ("Top two of the buffer", "None")
+            yield ("Top two of the buffer pos", "None")
+        
+        left_most_verb = None 
+        for i in range(1, len(self.words)):
+            if self.pos[i] == 'VERB':
+                left_most_verb = self.words[i]
+                break
+        if left_most_verb is not None:
+            yield ("Left most verb", left_most_verb) 
+        else:
+            yield ("Left most verb", "None")  
+>>>>>>> 07f5a58fe279d8e31fca60e0b65a4cb025ff7387
 
 
 
@@ -214,8 +264,119 @@ def heuristic_transition_sequence(sentence: DependencyGraph) -> Iterable[Transit
     """
     Implement this for extra credit
     """
+    universal_rules = {
+        ('VERB', 'VERB'),
+        ('VERB', 'NOUN'),
+        ('VERB', 'ADV'),
+        ('VERB', 'ADP'),
+        ('VERB', 'CONJ'),
+        ('VERB', 'DET'),
+        ('VERB', 'NUM'),
+        ('VERB', 'ADJ'),
+        ('VERB', 'X'),
+        ('NOUN', 'ADJ'),
+        ('NOUN', 'DET'),
+        ('NOUN', 'NUM'),
+        ('NOUN', 'NOUN'),
+        ('ADP', 'NOUN'),
+        ('ADP', 'ADV'),
+        ('ADJ', 'ADV'),
+    }
 
-    return []
+
+    words = []
+    pos = []
+
+    for i in range(len(sentence.nodes)):
+        node = sentence.nodes[i]
+        if i == 0:
+            words.append(kROOT)
+            pos.append('ROOT')
+        else:
+            words.append(node['word'])
+            pos.append(node['tag'])
+
+    num_words = len(words)
+    parents = {}
+    children = dict([(k, []) for k in range(num_words)])
+    # find the left-most verb 
+    left_most_verb = None
+    for i in range(1, num_words):
+        if pos[i] == 'VERB':
+            left_most_verb = i
+            break
+
+    if left_most_verb is not None:
+        parents[left_most_verb] = 0
+        children[0].append(left_most_verb)
+
+    for i in range(1, num_words):
+        if i in parents:
+            continue  # already has a parent
+
+        possible_heads = []
+        min_distance = num_words  
+
+        # Search for the nearest word w' satisfies the rules
+        for j in range(1, num_words):
+            if i == j:
+                continue
+            if (pos[j], pos[i]) in universal_rules:
+                distance = abs(i - j)
+                if distance < min_distance:
+                    min_distance = distance
+                    possible_heads = [j]
+                elif distance == min_distance:
+                    possible_heads.append(j)
+
+        if possible_heads:
+            head = min(possible_heads)
+            parents[i] = head
+            children[head].append(i)
+        else:
+            parents[i] = 0
+            children[0].append(i)
+    # print(words)
+    # print('heads:',heads)
+    # # Build nodes dictionary
+    # nodes = {}
+    # for i in range(num_words):
+    #     nodes[i] = {'address': i, 'word': words[i], 'tag': pos[i], 'head': heads[i]}
+
+    # # Create a DependencyGraph
+    # dg = DependencyGraph()
+    # dg.nodes = nodes
+    # return list(transition_sequence(dg))
+    parents[0] = None
+    # print(parents)
+    # print(children)
+    transitions = []
+    sr = ShiftReduceState(words,pos)
+    while len(sr.buffer) >0 or len(sr.stack) > 1:
+        # print(sr.stack)
+        # print(sr.buffer)
+        if len(sr.stack) >= 1:
+            # print(children)
+            l = sr.stack[-1]
+            r = sr.buffer[-1]
+            if parents[l] == r:
+                children[r].remove(l)
+                transitions.append(sr.left_arc())
+            elif parents[r] == l and len(children[r]) == 0:
+                if r in children[l]:
+                    children[l].remove(r)
+                transitions.append(sr.right_arc())
+            else:
+                transitions.append(sr.shift())
+        
+        #if only root is in the stack
+        else:
+            transitions.append(sr.shift())
+
+
+    return transitions
+
+ 
 
 def classifier_transition_sequence(classifier: MaxentClassifier, sentence: DependencyGraph) -> Iterable[Transition]:
     """
@@ -229,8 +390,64 @@ def classifier_transition_sequence(classifier: MaxentClassifier, sentence: Depen
     """
 
     # Complete this for extra credit
+    words=[]
+    pos = []
+    # print(sentence.nodes.items())
+    # pos=[node.get("tag", "") for _, node in sorted(sentence.nodes.items())]
+    for _, node in sentence.nodes.items():
+        words.append(node["word"])
+        pos.append(node["tag"])
+    #     print(node['deps'][''])
+    # print(words)
+    # print(pos)
+    words[0] = kROOT
+    sr = ShiftReduceState(words,pos)
 
-    return
+    transitions = []
+    while len(sr.buffer) >0 or len(sr.stack) > 1:
+        if len(sr.buffer) == 1 and len(sr.stack) == 0 and 0 in sr.buffer:
+            transitions.append(sr.shift())
+            break
+        index = sr.buffer[-1] if len(sr.buffer) > 0 else -1
+        feature_sets = dict(sr.feature_extractor(index))
+        action = classifier.classify(feature_sets)
+        prob = classifier.prob_classify(feature_sets)
+        # prob_dict = {}
+        # prob_dict['s'] = prob.prob('s')
+        # prob_dict['l'] = prob.prob('l')
+        # prob_dict['r'] = prob.prob('r')
+        # order = []
+        # for key, value in prob_dict.items():
+        #     print(key)
+        #     print(value)
+        action = prob.generate()
+        t = None
+        # print('buffer: ',sr.buffer)
+        # print('stack: ',sr.stack)
+        if action == 's':
+            if len(sr.buffer) > 1:
+                t = sr.shift()
+            else:
+                if len(sr.stack) >= 1:
+                    t = sr.right_arc()
+                else:
+                    t = sr.left_arc()
+        elif action == 'l':
+            if len(sr.stack) >= 1 and sr.stack[-1]>0:
+                t = sr.left_arc()
+            else:
+                t = sr.shift() if len(sr.buffer) > 1 else sr.right_arc()                 
+
+        elif action == 'r':
+            if len(sr.stack) >= 1:
+                t = sr.right_arc()
+            else:
+                t = sr.shift() if len(sr.buffer) > 1 else sr.left_arc()  
+        else:
+            t = sr.shift()
+        if t != None:
+            transitions.append(t)
+    return transitions
         
 def transition_sequence(sentence: DependencyGraph) -> Iterable[Transition]:
     """
@@ -239,15 +456,66 @@ def transition_sequence(sentence: DependencyGraph) -> Iterable[Transition]:
     :return: A list of transition objects that creates the dependency parse
     tree.
     """
-    words=[node.get("word", "") for _, node in sorted(sentence.nodes.items())],
-    pos=[node.get("tag", "") for _, node in sorted(sentence.nodes.items())]
-
-    print(words)
-    print(pos)
+    words=[]
+    pos = []
+    # print(sentence.nodes.items())
+    # pos=[node.get("tag", "") for _, node in sorted(sentence.nodes.items())]
+    for _, node in sorted(sentence.nodes.items()):
+        words.append(node["word"])
+        pos.append(node["tag"])
+    #     print(node['deps'][''])
+    # print(words)
+    # print(pos)
     words[0] = kROOT
     sr = ShiftReduceState(words,pos)
-    sr.pretty_print()
-    raise
+    num_words = len(sentence.nodes)
+    parents = {}
+    children = {}
+    for i in range(num_words):
+        node = sentence.nodes[i]
+        parents[i] = node['head']
+        children[i] = node['deps']['']
+    # print('parents',parents)
+    # print(children)
+    while len(sr.buffer) >0 or len(sr.stack) > 1:
+        if len(sr.stack) >= 1:
+            # print(children)
+            l = sr.stack[-1]
+            r = sr.buffer[-1]
+            if parents[l] == r:
+                children[r].remove(l)
+                transition = sr.left_arc()
+            elif parents[r] == l and len(children[r]) == 0:
+                if r in children[l]:
+                    children[l].remove(r)
+                transition = sr.right_arc()
+            else:
+                transition = sr.shift()
+        
+        #if only root is in the stack
+        else:
+            transition = sr.shift()
+
+        index = sr.buffer[-1] if len(sr.buffer) > 0 else -1
+        for feat_name, feat_value in sr.feature_extractor(index):
+            transition.add_feature(feat_name, feat_value)
+        # print('stack:',sr.stack)
+        # print('buffer:',sr.buffer)
+        yield transition
+
+
+    # for node_id, node in sorted(sentence.nodes.items()):
+    #     print(node_id)
+    #     if node_id == 0:
+    #         continue
+    #     dep = node['deps']['']
+    #     print(dep)
+    #     # while sr.buffer:
+    #     #     if 
+    #     # print(node)
+    # print(sr.pretty_print())
+    
+
 
  
     
@@ -275,18 +543,39 @@ def parse_from_transition(word_sequence: Iterable[Tuple[str, str]], transitions:
   # insert root if needed
   if word_sequence[0][0] != kROOT:
     word_sequence.insert(0, (kROOT, 'TOP'))
-
   sent = ['']*(len(word_sequence))         
+#   print(word_sequence)
+  words = [w for w, _ in word_sequence]
+  pos = [t for _, t in word_sequence]
 
-
+  sr = ShiftReduceState(words, pos)
+  for t in transitions:
+      sr.apply(t)
   
   # get the head index of each word
-
+#   print('edges:',sr.edges)
+  for i in range(len(words)):
+      word = words[i]
+      tag = pos[i]
+      head = None
+      for h, d in sr.edges:
+          if d == i:
+              head = h
+              break
+      if head is None and i != 0:
+          head = 0  
+      elif head is None and i == 0:
+          head = -1  # Head of root which need to be deleted
+      line = f"{word}\t{tag}\t{head}"
+      sent[i] = line
       
-
+#   sent[0] = f"{'ROOT'}\t{'TOP'}\t{-1}"
   # You're allowed to create your DependencyGraph however you like, but this
   # is how I did it.
-  reconstructed = '\n'.join(sent)
+  reconstructed = '\n'.join(sent[1:])
+#   print('sent',sent)
+#   print('recons:',reconstructed)
+#   print('Graph: ',nltk.parse.dependencygraph.DependencyGraph(reconstructed))
   return nltk.parse.dependencygraph.DependencyGraph(reconstructed)
 
 def sentence_attachment_accuracy(reference: DependencyGraph, sample: DependencyGraph) -> float :
@@ -295,7 +584,14 @@ def sentence_attachment_accuracy(reference: DependencyGraph, sample: DependencyG
     attachments (ROOT is always correct)
     """
 
-    correct = 0                                                            
+    correct = 0   
+    for idx in reference.nodes:
+        if idx == 0:
+            continue
+        ref_head = reference.nodes[idx]['head']
+        sample_head = sample.nodes[idx]['head']
+        if ref_head == sample_head:
+            correct += 1                                                 
     return correct
 
 def attachment_accuracy(classifier: ClassifierI, reference_sentences: Iterable[DependencyGraph]) -> float:
@@ -305,10 +601,21 @@ def attachment_accuracy(classifier: ClassifierI, reference_sentences: Iterable[D
     """
     correct = 0
     num_attachments = 0
-    for example in reference_sentences:
+    
+    for i in reference_sentences:
         # Implement this for extra credit
-        sentence = example["sentence"]
-        num_attachments += len(sentence.nodes) - 1                                     
+        reference = i["sentence"]
+        words=[]
+        for _, node in sorted(reference.nodes.items()):
+            words.append((node["word"],node["tag"]))
+        words[0] = (kROOT,'TOP')
+        transitions = classifier_transition_sequence(classifier,reference)
+        sample = parse_from_transition(words,transitions)
+        
+        correct += sentence_attachment_accuracy(reference, sample)
+        # print('correct:',sentence_attachment_accuracy(reference, sample))
+        # print('total1:',len(words))
+        num_attachments += len(words) - 1                                     
 
     return correct / num_attachments
 
@@ -320,15 +627,38 @@ def classifier_accuracy(classifier: ClassifierI, reference_transitions: Iterable
     """
 
     correct = 0
-    total_examples = 0
+    total = 0
     for sentence in reference_transitions:
         predictions = [classifier.classify(x[0]) for x in sentence["features"]]
         labels = [x[1] for x in sentence["features"]]
+        temp = sum(1 for x, y in zip(predictions, labels) if x == y)
+        correct += temp
+        total += len(predictions)
+    return correct / total
 
-        correct += sum(1 for x, y in zip(predictions, labels) if x == y)
-        total_examples += len(predictions)
-    return correct / total_examples
+def heuristic_attachment_accuracy(reference_sentences: Iterable[DependencyGraph]) -> float:
+    """
+    Compute the average attachment accuracy for the heuristic parser on a corpus
+    of sentences.
+    """
+    correct = 0
+    num_attachments = 0
+    
+    for i in reference_sentences:
+        # Implement this for extra credit
+        reference = i["sentence"]
+        words=[]
+        for _, node in sorted(reference.nodes.items()):
+            words.append((node["word"],node["tag"]))
+        words[0] = (kROOT,'TOP')
+        transitions = heuristic_transition_sequence(reference)
+        sample = parse_from_transition(words,transitions)
         
+        correct += sentence_attachment_accuracy(reference, sample)
+        num_attachments += len(words) - 1                                     
+
+    return correct / num_attachments
+
 
 if __name__ == "__main__":
     from itertools import chain
@@ -337,9 +667,20 @@ if __name__ == "__main__":
     sent = nltk.parse.dependencygraph.DependencyGraph(kCORRECT)
     words = [x.split('\t')[0] for x in kCORRECT.split('\n')]
     words = [kROOT] + words
-    print(sent)
+    # To delete
+    # print(sent)
+    # w=[]
+    # for _, node in sorted(sent.nodes.items()):
+    #     w.append((node["word"],node["tag"]))
+    # w[0] = (kROOT,'TOP')
+    # print(w)
+    #####
+    # trans = []
     for ii in transition_sequence(sent):
         print(ii.pretty_print(sent))
+        # trans.append(ii)
+    
+    # parse_from_transition(w,trans)
     
     train_data = list(split_data(transition_sequence))
     test_data = list(split_data(transition_sequence, generate_test=True))
@@ -358,4 +699,7 @@ if __name__ == "__main__":
 
     attachment_acc = attachment_accuracy(classifier, test_data)
     print('Held-out Attachment Accuracy:     %6.4f' % attachment_acc)
+
+    heuristic_acc = heuristic_attachment_accuracy(test_data)
+    print('Heuristic Attachment Accuracy:    %6.4f' % heuristic_acc)
 
