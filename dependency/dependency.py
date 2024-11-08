@@ -176,27 +176,11 @@ class ShiftReduceState:
         assert len(self.buffer) > 0, "Buffer is empty for right arc"
         assert len(self.stack) > 0, "Stack is empty for right arc"
 
-<<<<<<< HEAD
         # Implement this
-<<<<<<< HEAD
-        stack_top = self.stack[-1]
-        buffer_top = self.buffer[-1]
-        self.buffer.append(self.stack.pop(-1))
-=======
-        # Implement additional features.  Because the goal is to train
-        # a classifier to predict the type, you cannot use type itself
-        # as a feature (nor the identify of the words in the edge).
-        # However, you can (and should) inspect the buffer and the
-        # stack to extract features including the part of speech,
-        # word, depth in tree, etc.
-
->>>>>>> upstream/master
-=======
         stack_top = self.stack.pop(-1)
         buffer_top = self.buffer.pop(-1)
         self.edges.append((stack_top, buffer_top))
         self.buffer.append(stack_top)
->>>>>>> 07f5a58fe279d8e31fca60e0b65a4cb025ff7387
         return Transition('r', (stack_top, buffer_top))
     
     def feature_extractor(self, index: int) -> Iterable[Tuple[str, float]]:
@@ -214,11 +198,6 @@ class ShiftReduceState:
         yield ("Stack size", len(self.stack))
         yield ("Part of the speech", index)
     
-<<<<<<< HEAD
-        # Implement this.  
-
-
-=======
         # Implement this
         if len(self.stack) > 0:
             stop = self.stack[-1]
@@ -256,7 +235,6 @@ class ShiftReduceState:
             yield ("Left most verb", left_most_verb) 
         else:
             yield ("Left most verb", "None")  
->>>>>>> 07f5a58fe279d8e31fca60e0b65a4cb025ff7387
 
 
 
