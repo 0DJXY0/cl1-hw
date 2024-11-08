@@ -21,6 +21,8 @@ def initialize_base_model(helper_function=AutoModelForSequenceClassification,
     model = helper_function.from_pretrained(model_name, num_labels=2)
 
     # Freeze the model parameters
+    for param in model.parameters():
+        param.requires_grad = False
 
     tokenizer = AutoTokenizer.from_pretrained(model_name)
     return model, tokenizer
@@ -31,6 +33,10 @@ class LoRALayer(torch.nn.Module):
         Initialize a LoRA with two weight matrices whose product is the same as the original parameter matrix.
         """
         super().__init__()
+
+        # self.A = torch.nn.Parameter(torch.randn(rank, in_dim) * 0.01)
+        # self.B = torch.nn.Parameter(torch.zeros(out_dim, rank))
+        # self.scaling = alpha / rank
 
         self.A = None
         self.B = None
@@ -43,8 +49,8 @@ class LoRALayer(torch.nn.Module):
         """
         Compute the linear layer's original result, then add the low-rank delta
         """
+        # delta = self.scaling * (x @ self.A.t() @ self.B.t())
         delta = torch.zeros_like(x)
-
         # Compute the low-rank delta
         return x + delta
 
