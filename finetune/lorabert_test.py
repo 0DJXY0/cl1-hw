@@ -39,7 +39,6 @@ class DanTest(unittest.TestCase):
             self.lora_layer.B.data = torch.FloatTensor([[1, 0, 4, 6], [0, 3, -1, 3]])
 
         x = torch.FloatTensor([2, 4, 6])
-
         self.util_tensor_compare(self.lora_layer(x), torch.FloatTensor([ 1., 18., -2., 24.]), "lora forward")
 
     def test_bert_reparameterize(self):

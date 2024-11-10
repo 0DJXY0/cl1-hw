@@ -33,26 +33,44 @@ class LoRALayer(torch.nn.Module):
         Initialize a LoRA with two weight matrices whose product is the same as the original parameter matrix.
         """
         super().__init__()
-
-        # self.A = torch.nn.Parameter(torch.randn(rank, in_dim) * 0.01)
-        # self.B = torch.nn.Parameter(torch.zeros(out_dim, rank))
-        # self.scaling = alpha / rank
-
         self.A = None
         self.B = None
         self.alpha = 0
 
+        self.in_dim = in_dim
+        self.out_dim = out_dim
+
         # Complete the initialization of the two weight matrices
         self.alpha = alpha
+        self.rank = rank
+        self.A = torch.nn.Parameter(torch.randn(in_dim,rank))
+        self.B = torch.nn.Parameter(torch.zeros(rank,out_dim))
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         """
         Compute the linear layer's original result, then add the low-rank delta
         """
-        # delta = self.scaling * (x @ self.A.t() @ self.B.t())
-        delta = torch.zeros_like(x)
+        assert x.shape[-1] == self.in_dim, "Input dimension %s does not match input dimension %i" % (str(x.shape), self.in_dim)
+
+        if len(x.shape) == 1:
+            # print('1d x shape:',x.shape)
+            delta = torch.zeros(self.out_dim)
+            output_dimension = torch.Size([self.out_dim])
+        else:
+            # print('nd x shape:',x.shape)
+            delta = torch.zeros((x.shape[0], self.in_dim))
+            output_dimension = torch.Size((x.shape[0], self.out_dim))
+
         # Compute the low-rank delta
-        return x + delta
+        
+        # print('shapeA:',self.A.shape)
+        # print(self.B.shape)
+        # scale = 1/self.rank if self.rank !=0 else 1
+        delta = self.alpha * x @ self.A @ self.B
+        # assert delta.shape == output_dimension, "Delta size %s inconsistent with output dimension %i" % (str(delta.shape), self.out_dim)
+        return delta
+
+
 
 
 class LinearLoRA(torch.nn.Module):
@@ -62,9 +80,8 @@ class LinearLoRA(torch.nn.Module):
         """
         super().__init__()
         self.linear = linear
-
         # Initialize the LoRA layer
-
+        self.lora = LoRALayer(linear.in_features, linear.out_features, rank, alpha)
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         """
         Forward pass with LoRA adatpation.
@@ -72,6 +89,7 @@ class LinearLoRA(torch.nn.Module):
         result = self.linear(x)
 
         # Add the LoRA delta
+        result += self.lora(x)
         return result
 
 # TODO(jbg): Get rid of the hardcoded modules so that it generalizes to other models
@@ -86,7 +104,21 @@ def add_lora(model: torch.nn.Module, rank: int, alpha: float,
         alpha: The scaling factor for the LoRA matrices.
         modules_to_adapt: The key of the dictionary is the model component to adapt (e.g., "attention" or "ffn"), and the values are specific linear layers in that component to adapt.  Anything in this dictionary will be adapted, but anything else will remain frozen.
     """
-    
+    convert_lora = partial(LinearLoRA, rank=rank, alpha=alpha)
+
+    for layer in model.layer:
+            for modules, values in modules_to_adapt.items():
+                if hasattr(layer, modules):
+                    module = getattr(layer, modules)
+                    for linear_layer_name in values:
+                        attr_name = f"{modules}.{linear_layer_name}"
+                        # print('should have name: ',attr_name)
+                        if hasattr(module, linear_layer_name):
+                            # print('receive name: ',attr_name)
+                            linear_layer = getattr(module, linear_layer_name)
+                            # print(linear_layer)
+                            setattr(module, linear_layer_name, convert_lora(linear_layer))           
+
 
     return model
                 
@@ -118,26 +150,28 @@ class LoRABertBuzzzer(Buzzer):
         misses = 0
         hits = 0
         for metadatum, answer, run in zip(metadata, answers, runs):
-            example = {}
+                    example = {}
 
-            clean = guesser.clean(run)
-            if clean in guesser.cache:
-                correct = 0
-                if rough_compare(guesser.cache[clean]["guess"], answer):
-                    correct = 1
-                hits += 1
-            else:
-                misses += 1
-                continue
+                    clean = guesser.clean(run)
+                    if clean in guesser.cache:
+                        correct = 0
+                        if rough_compare(guesser.cache[clean]["guess"], answer):
+                            correct = 1
+                        hits += 1
+                    else:
+                        misses += 1
+                        continue
 
-            if answer is None:
-                answer = ""
+                    if answer is None:
+                        answer = ""
 
-            example["text"] = run + " [SEP] " + answer
-            example["label"] = correct
-
-            dataset.append(example)
-
+                    lrun = len(run)
+                    lanswer = len(answer)
+                    example["text"] = run + " [SEP] " + answer
+                    example["label"] = correct
+                    example["length of run"] = lrun
+                    example["length of answer"] = lanswer 
+                    dataset.append(example)
 
         print("Hits: %i, Misses: %i" % (hits, misses))
         dataframe = pd.DataFrame(data=dataset)
